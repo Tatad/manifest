@@ -67,7 +67,7 @@ class ManifestController extends Controller
             echo 'HTTP Status Code: ' . curl_getinfo($ch, CURLINFO_HTTP_CODE) . PHP_EOL;
             echo 'Response Body: ' . $response . PHP_EOL;
             $res = json_decode($response,true);
-            
+
             if($res['title'] != ""){
                 Manifest::where('item', $key)->update(['item_name' => $res['title'], 'images' => $res['images']['src']]);
             }else{
@@ -105,6 +105,7 @@ class ManifestController extends Controller
                     'description' => $itemData->description,
                     'msrp' => $itemData->msrp,
                     'features' => $itemData->features,
+                    'item_name' => $itemData->item_name,
                     'images' => json_decode($itemData->images,true)
                 ]; 
             });

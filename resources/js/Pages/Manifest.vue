@@ -3,7 +3,7 @@
 import { ref } from "vue";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import type { Header, Item } from "vue3-easy-data-table";
+import type { Header, Item  } from "vue3-easy-data-table";
 import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -22,6 +22,9 @@ defineProps({
     },
 });
 
+const sortBy = "id";
+const sortType: SortType = "desc";
+
 const searchValue = ref("");
 
 const form = useForm({
@@ -37,12 +40,15 @@ const form = useForm({
   
 const headers: Header[] = [
   { text: "", value: "selected" },
-  { text: "ID", value: "id" },
-  { text: "Item #", value: "item"},
-  { text: "Description", value: "description"},
-  { text: "Quantity", value: "quantity"},
-  { text: "MSRP", value: "msrp"},
+  { text: "ID", value: "id", sortable: true },
+  { text: "Item #", value: "item", sortable: true},
+  { text: "Description", value: "description", sortable: true},
+  { text: "Quantity", value: "quantity", sortable: true},
+  { text: "MSRP", value: "msrp", sortable: true},
+  { text: "$ Total", value: "totalMsrp", sortable: true},
   { text: "Pallet #", value: "pallet", sortable: true},
+  { text: "Costco Image", value: "costcoImage", sortable: true},
+  { text: "Costco URL", value: "costcoUrl", sortable: true},
   { text: "Actions",  value: "action"}
 ];
 
@@ -90,14 +96,16 @@ const submit = () => {
 }
 
 const submitManifest = (item) => {
-    form.selected = selectedItems;
-    form.get(route('manifest'), {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
+    let selectedItemNumber = [];
+    if(selectedItems.value){
+        selectedItems.value.forEach(val => {
+            selectedItemNumber.push(val.item);
+           //or if you pass float numbers , use parseFloat()
+        });
+    }
 
-        }
-    });
+    form.selected = selectedItemNumber;
+
     var date = new Date();
     
     return new Promise((res, rej) => {
@@ -110,6 +118,14 @@ const submitManifest = (item) => {
             openManifestItem.value = false;
             sendManifestConfirm.value = false;
             res(response.data);
+            //refresh the component
+            form.get(route('manifest'), {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    
+                }
+            });
         }).catch((err) => {
         rej(err);
       });
@@ -131,6 +147,18 @@ let onChange = (event) => {
 
 const selectedItems = ref([])
 
+const total = () => {
+    let basket_total = 0;
+    if(selectedItems.value){
+        selectedItems.value.forEach(val => {
+            basket_total += Number(val.msrp);
+           //or if you pass float numbers , use parseFloat()
+        });
+    }
+    return basket_total;
+}
+
+
 </script>
 
 <template>
@@ -142,165 +170,184 @@ const selectedItems = ref([])
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 
-    <div class="grid grid-cols-3 gap-3">
-        <div class="m-6">
-            <InputLabel for="search" value="Filter Search"/>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="m-6">
+                            <InputLabel for="search" value="Filter Search"/>
 
-            <TextInput
-                id="search"
-                v-model="searchValue"
-                type="readonly"
-                class="border-solid border-2 border-black-600 p-2 mt-1 block"
-                placeholder="Search here..."
-            />
+                            <TextInput
+                                id="search"
+                                v-model="searchValue"
+                                type="readonly"
+                                class="border-solid border-2 border-black-600 p-2 mt-1 block"
+                                placeholder="Search here..."
+                            />
 
-            
-        </div>
+                            
+                        </div>
 
-        <div class="m-6 pt-6">
-            <input type="file" @change="onChange" >
-        </div>
+                        <div class="m-6 pt-6">
+                            <input type="file" @change="onChange" >
+                        </div>
 
-        <div class="m-6 pt-6" v-if="selectedItems.length">
-            <PrimaryButton @click="sendManifestConfirm = true"> Send Selected Manifest </PrimaryButton>
+                        <div class="m-6 pt-6" v-if="selectedItems.length">
+                            <PrimaryButton @click="sendManifestConfirm = true"> Send Selected Manifest </PrimaryButton>
 
-            <Modal :show="sendManifestConfirm" @close="closeModal">
-                <div class="p-6">
+                            <Modal :show="sendManifestConfirm" @close="closeModal">
+                                <div class="p-6">
 
-                    <div class="mt-6">
+                                    <div class="mt-6">
 
-                        <h1>Are you sure you want to send the selected manifest?</h1>
-                        
+                                        <h1>Are you sure you want to send the selected manifest?</h1>
+                                        
+                                    </div>
+
+                                    <div class="mt-6 flex justify-end">
+                                        <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
+                                        <PrimaryButton @click="submitManifest"> Submit </PrimaryButton>
+
+                                        
+                                    </div>
+                                </div>
+                            </Modal>
+                        </div>
                     </div>
-
-                    <div class="mt-6 flex justify-end">
-                        <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
-                        <PrimaryButton @click="submitManifest"> Submit </PrimaryButton>
-
-                        
-                    </div>
-                </div>
-            </Modal>
-        </div>
-    </div>
+                    
+                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Total: ${{ total() }}</h3>
                    <EasyDataTable
-    :headers="headers"
-    :items="manifests"
-    :search-value="searchValue"
-  >
+                        :headers="headers"
+                        :items="manifests"
+                        :search-value="searchValue"
+                      >
 
-  <template #item-selected="item">
-      <div class="customize-header">
-        <input type="checkbox" v-model="selectedItems" :value="item.item">
-        </div>
-    </template>
+                        <template #item-selected="item">
+                            <div class="customize-header">
+                                <input type="checkbox" v-model="selectedItems" :value="item">
+                            </div>
+                        </template>
 
-  
-  <template #item-action="item">
-      <div class="customize-header">
-        <PrimaryButton @click="updateManifestItem(item)"> Edit </PrimaryButton>
-        </div>
-    </template>
-  </EasyDataTable>
+                        <template #item-costcoImage="item">
+                            <div class="customize-header">
+                                <span v-if="item.images">{{item.images}}</span><span v-else>N/A</span>
+                            </div>
+                        </template>
+
+                        <template #item-costcoUrl="item">
+                            <div class="customize-header">
+                                <a v-if="item.images" target="_blank" :href="'https://www.costco.ca/CatalogSearch?keyword='+item.item">{{item.item_name}}<span></span></a><span v-else>N/A</span>
+                            </div>
+                        </template>
+
+                        <template #item-totalMsrp="item">
+                            <div class="customize-header">
+                                {{ item.msrp * item.quantity }}
+                            </div>
+                        </template>
+                      
+                        <template #item-action="item">
+                          <div class="customize-header">
+                            <PrimaryButton @click="updateManifestItem(item)"> Edit </PrimaryButton>
+                            </div>
+                        </template>
+                    </EasyDataTable>
                     
                 </div>
             </div>
         </div>
-    <Modal :show="openManifestItem" @close="closeModal">
-        <div class="p-6">
+        <Modal :show="openManifestItem" @close="closeModal">
+            <div class="p-6">
 
-            <div class="mt-6">
-                <InputLabel for="item" value="Item Number"/>
+                <div class="mt-6">
+                    <InputLabel for="item" value="Item Number"/>
 
-                <TextInput
-                    id="item"
-                    v-model="form.item"
-                    type="readonly"
-                    class="mt-1 block w-3/4"
-                    placeholder="Item Number"
-                />
+                    <TextInput
+                        id="item"
+                        v-model="form.item"
+                        type="readonly"
+                        class="mt-1 block w-3/4"
+                        placeholder="Item Number"
+                    />
 
-                <InputError :message="form.errors.item" class="mt-2" />
-                
-            </div>
-
-            <div class="mt-6">
-                <InputLabel for="description" value="Description"/>
-
-                <TextInput
-                    id="description"
-                    v-model="form.description"
-                    type="readonly"
-                    class="mt-1 block w-3/4"
-                    placeholder="Description"
-                />
-
-                <InputError :message="form.errors.description" class="mt-2" />
-                
-            </div>
-
-            <div class="mt-6">
-                <InputLabel for="pallet" value="Palet Number"/>
-
-                <TextInput
-                    id="pallet"
-                    v-model="form.pallet"
-                    type="readonly"
-                    class="mt-1 block w-3/4"
-                    placeholder="Palet Number"
-                />
-
-                <InputError :message="form.errors.pallet" class="mt-2" />
-                
-            </div>
-
-            <button class="button btn-primary" @click="addRow">Add row</button>
-
-            <div v-for="(row, index) in form.images">
-
-                  
-                        <label class="fileContainer">
-                           Image
-                        </label>
-
-                        <TextInput
-                            id="image"
-                            v-model="row.image"
-                            type="text"
-                            class="mt-1 block w-3/4"
-                            placeholder="Image URL"
-                        />
-                   
-                        <a v-on:click="removeElement(index);" style="cursor: pointer">Remove</a>
+                    <InputError :message="form.errors.item" class="mt-2" />
                     
-
                 </div>
 
-            <div class="mt-6">
-                <InputLabel for="features" value="Features"/>
+                <div class="mt-6">
+                    <InputLabel for="description" value="Description"/>
 
-                <TextArea
-                    id="features"
-                    v-model="form.features"
-                    type="text"
-                    class="mt-1 block w-3/4"
-                    placeholder="Features"
-                />
+                    <TextInput
+                        id="description"
+                        v-model="form.description"
+                        type="readonly"
+                        class="mt-1 block w-3/4"
+                        placeholder="Description"
+                    />
 
-                <InputError :message="form.errors.features" class="mt-2" />
-                
+                    <InputError :message="form.errors.description" class="mt-2" />
+                    
+                </div>
+
+                <div class="mt-6">
+                    <InputLabel for="pallet" value="Palet Number"/>
+
+                    <TextInput
+                        id="pallet"
+                        v-model="form.pallet"
+                        type="readonly"
+                        class="mt-1 block w-3/4"
+                        placeholder="Palet Number"
+                    />
+
+                    <InputError :message="form.errors.pallet" class="mt-2" />
+                    
+                </div>
+
+                <button class="button btn-primary" @click="addRow">Add row</button>
+
+                <div v-for="(row, index) in form.images">
+
+                      
+                            <label class="fileContainer">
+                               Image
+                            </label>
+
+                            <TextInput
+                                id="image"
+                                v-model="row.image"
+                                type="text"
+                                class="mt-1 block w-3/4"
+                                placeholder="Image URL"
+                            />
+                       
+                            <a v-on:click="removeElement(index);" style="cursor: pointer">Remove</a>
+                        
+
+                    </div>
+
+                <div class="mt-6">
+                    <InputLabel for="features" value="Features"/>
+
+                    <TextArea
+                        id="features"
+                        v-model="form.features"
+                        type="text"
+                        class="mt-1 block w-3/4"
+                        placeholder="Features"
+                    />
+
+                    <InputError :message="form.errors.features" class="mt-2" />
+                    
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
+                    <PrimaryButton @click="submit"> Submit </PrimaryButton>
+
+                    
+                </div>
             </div>
-
-            <div class="mt-6 flex justify-end">
-                <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
-                <PrimaryButton @click="submit"> Submit </PrimaryButton>
-
-                
-            </div>
-        </div>
-    </Modal>
+        </Modal>
     </AuthenticatedLayout>
 </template>

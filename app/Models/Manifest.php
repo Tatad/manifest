@@ -23,7 +23,8 @@ class Manifest extends Model
         'pallet',
         'features',
         'images',
-        'status'
+        'status',
+        'item_name'
     ];
 
 }
