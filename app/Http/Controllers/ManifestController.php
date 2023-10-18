@@ -31,7 +31,7 @@ class ManifestController extends Controller
         //dd($ids);
         //$ids = [1660896];
         $results = [];
-        foreach($ids as $key => $key){
+        foreach($ids as $key => $val){
             // set url
             $extract_rules = urlencode('{
                 "title" : {
@@ -67,8 +67,9 @@ class ManifestController extends Controller
             echo 'HTTP Status Code: ' . curl_getinfo($ch, CURLINFO_HTTP_CODE) . PHP_EOL;
             echo 'Response Body: ' . $response . PHP_EOL;
             $res = json_decode($response,true);
+            
             if($res['title'] != ""){
-                Manifest::where('item', $key)->update(['item_name' => $res['title'], 'images' => $res['images']]);
+                Manifest::where('item', $key)->update(['item_name' => $res['title'], 'images' => $res['images']['src']]);
             }else{
                 Manifest::where('item', $key)->update(['item_name' => 'not_available', 'images' => 'not_available']);
             }
