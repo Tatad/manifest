@@ -106,7 +106,7 @@ class ManifestController extends Controller
                     'msrp' => $itemData->msrp,
                     'features' => $itemData->features,
                     'item_name' => $itemData->item_name,
-                    'images' => json_decode($itemData->images,true)
+                    'images' => $itemData->images
                 ]; 
             });
             // $mergedData = array_merge_recursive($collectedData,$collectedGroupByData);
