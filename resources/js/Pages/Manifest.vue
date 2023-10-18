@@ -230,13 +230,13 @@ const total = () => {
 
                         <template #item-costcoImage="item">
                             <div class="customize-header">
-                                <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="item.images" v-if="item.images">{{item.images}}</a><span v-else>N/A</span>
+                                <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="item.images" v-if="item.images != 'not_available'">{{item.images}}</a><span v-else>N/A</span>
                             </div>
                         </template>
 
                         <template #item-costcoUrl="item">
                             <div class="customize-header">
-                                <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" v-if="item.images" target="_blank" :href="'https://www.costco.ca/CatalogSearch?keyword='+item.item">{{item.item_name}}<span></span></a><span v-else>N/A</span>
+                                <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" v-if="item.images != 'not_available'" target="_blank" :href="'https://www.costco.ca/CatalogSearch?keyword='+item.item">{{item.item_name}}<span></span></a><span v-else>N/A</span>
                             </div>
                         </template>
 
