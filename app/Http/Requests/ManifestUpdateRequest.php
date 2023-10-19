@@ -16,8 +16,7 @@ class ManifestUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'images' => ['array'],
-            'features' => ['string'],
+            'images' => ['string'],
         ];
     }
 }

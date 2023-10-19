@@ -69,15 +69,15 @@ const closeModal = () => {
     sendManifestConfirm.value = false;
 };
 
-const addRow = () => {
-    form.images.push({
-        image: ''
-    });
-}
+// const addRow = () => {
+//     form.images.push({
+//         image: ''
+//     });
+// }
 
-const removeElement = (index) => {
-    form.images.splice(index, 1);
-}
+// const removeElement = (index) => {
+//     form.images.splice(index, 1);
+// }
 const setFilename = (event, row) => {
     var file = event.target.files[0];
     row.file = file
@@ -266,7 +266,7 @@ const total = () => {
                         id="item"
                         v-model="form.item"
                         type="readonly"
-                        class="mt-1 block w-3/4"
+                        class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                         placeholder="Item Number"
                     />
 
@@ -281,7 +281,7 @@ const total = () => {
                         id="description"
                         v-model="form.description"
                         type="readonly"
-                        class="mt-1 block w-3/4"
+                        class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                         placeholder="Description"
                     />
 
@@ -296,7 +296,7 @@ const total = () => {
                         id="pallet"
                         v-model="form.pallet"
                         type="readonly"
-                        class="mt-1 block w-3/4"
+                        class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                         placeholder="Palet Number"
                     />
 
@@ -304,8 +304,7 @@ const total = () => {
                     
                 </div>
 
-                <button class="button btn-primary" @click="addRow">Add row</button>
-
+                <!-- <button class="button btn-primary" @click="addRow">Add row</button>
                 <div v-for="(row, index) in form.images">
 
                       
@@ -324,7 +323,20 @@ const total = () => {
                             <a v-on:click="removeElement(index);" style="cursor: pointer">Remove</a>
                         
 
-                    </div>
+                    </div> -->
+                <div class="mt-6">
+                    <label class="fileContainer">
+                       Image URL
+                    </label>
+
+                    <TextInput
+                        id="image"
+                        v-model="form.images"
+                        type="text"
+                        class="mt-1 block w-3/4"
+                        placeholder="Image URL"
+                    />
+                </div>
 
                 <div class="mt-6">
                     <InputLabel for="features" value="Features"/>

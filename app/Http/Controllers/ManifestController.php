@@ -89,11 +89,8 @@ class ManifestController extends Controller
     }
 
     public function manifest(Request $request){
-        //$manifests = Manifest::all()->groupBy('pallet');
         $manifests = Manifest::where(['status' => 0])->get()->groupBy('pallet');
-        //dd($manifests);
         $manifestData = collect($manifests)->map(function ($data){
-            //$collectedGroupByData = collect($data)->groupBy('item')->map->count();
             $collectedData = collect($data)->groupBy('item')->map(function($d){
                 $count = collect($d)->groupBy('item')->map->count()->values()->first();
                 $itemData = ($d)->first();
@@ -111,11 +108,9 @@ class ManifestController extends Controller
                     'totalMsrp' => round(($count * $itemData->msrp),2)
                 ]; 
             });
-            // $mergedData = array_merge_recursive($collectedData,$collectedGroupByData);
             return collect($collectedData)->values();
         })->values()->toArray();
         $newArray = call_user_func_array('array_merge', $manifestData);
-        //dd($newArray);
         return Inertia::render('Manifest', [
             'manifests' => collect($newArray)->values()->toArray()
         ]);
@@ -141,11 +136,9 @@ class ManifestController extends Controller
                     'totalMsrp' => round(($count * $itemData->msrp),2)
                 ]; 
             });
-            // $mergedData = array_merge_recursive($collectedData,$collectedGroupByData);
             return collect($collectedData)->values();
         })->values()->toArray();
         $newArray = call_user_func_array('array_merge', $manifestData);
-        //dd($newArray);
         return Inertia::render('ManifestSent', [
             'manifests' => collect($newArray)->values()->toArray()
         ]);
@@ -157,8 +150,8 @@ class ManifestController extends Controller
         $manifests = Manifest::where('item', $input['item'])->get();
 
         foreach($manifests as $key => $manifest){
-            $manifest->images = json_encode($input['images']);
-            $manifest->features = json_encode($input['features']);
+            $manifest->images = ($input['images']);
+            $manifest->features = ($input['features']);
             $manifest->save();
         }
         
