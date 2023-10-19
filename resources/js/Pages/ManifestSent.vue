@@ -187,9 +187,9 @@ const total = () => {
                             
                         </div>
 
-                        <div class="m-6 pt-6">
+                        <!-- <div class="m-6 pt-6">
                             <input type="file" @change="onChange" >
-                        </div>
+                        </div> -->
 
                         <div class="m-6 pt-6" v-if="selectedItems.length">
                             <PrimaryButton @click="restoreManifestConfirm = true"> Restore Selected Manifest </PrimaryButton>
