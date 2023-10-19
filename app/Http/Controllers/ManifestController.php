@@ -106,7 +106,9 @@ class ManifestController extends Controller
                     'msrp' => $itemData->msrp,
                     'features' => $itemData->features,
                     'item_name' => $itemData->item_name,
-                    'images' => $itemData->images
+                    'images' => $itemData->images,
+                    'costcoUrl' => $itemData->item_name,
+                    'totalMsrp' => round(($count * $itemData->msrp),2)
                 ]; 
             });
             // $mergedData = array_merge_recursive($collectedData,$collectedGroupByData);
@@ -115,6 +117,36 @@ class ManifestController extends Controller
         $newArray = call_user_func_array('array_merge', $manifestData);
         //dd($newArray);
         return Inertia::render('Manifest', [
+            'manifests' => collect($newArray)->values()->toArray()
+        ]);
+    }
+
+    public function manifestSent(Request $request){
+        $manifests = Manifest::where(['status' => 1])->get()->groupBy('pallet');
+        $manifestData = collect($manifests)->map(function ($data){
+            $collectedData = collect($data)->groupBy('item')->map(function($d){
+                $count = collect($d)->groupBy('item')->map->count()->values()->first();
+                $itemData = ($d)->first();
+                return [
+                    'item' => $itemData->item,
+                    'quantity' => $count, 
+                    'id' => $itemData->id, 
+                    'pallet' => $itemData->pallet,
+                    'description' => $itemData->description,
+                    'msrp' => $itemData->msrp,
+                    'features' => $itemData->features,
+                    'item_name' => $itemData->item_name,
+                    'images' => $itemData->images,
+                    'costcoUrl' => $itemData->item_name,
+                    'totalMsrp' => round(($count * $itemData->msrp),2)
+                ]; 
+            });
+            // $mergedData = array_merge_recursive($collectedData,$collectedGroupByData);
+            return collect($collectedData)->values();
+        })->values()->toArray();
+        $newArray = call_user_func_array('array_merge', $manifestData);
+        //dd($newArray);
+        return Inertia::render('ManifestSent', [
             'manifests' => collect($newArray)->values()->toArray()
         ]);
     }
@@ -142,6 +174,13 @@ class ManifestController extends Controller
         );
 
         return \Excel::download($export, 'manifest.xlsx');
+    }
+
+    public function restore(Request $request){
+        $input = $request->all();
+
+        $manifest = Manifest::whereIn('item', $input['selected'])->update(['status' => 0]);
+        return 'success';
     }
 }
 

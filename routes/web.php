@@ -36,11 +36,13 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/manifest', [ManifestController::class, 'manifest'])->name('manifest');
+    Route::get('/manifest-sent', [ManifestController::class, 'manifestSent'])->name('manifest.sent');
 
     Route::get('/manifest-data', [ManifestController::class, 'manifestData'])->name('manifestData');
     Route::post('/manifest-upload', [ManifestController::class, 'updload'])->name('manifest.upload');
     Route::patch('/manifest', [ManifestController::class, 'update'])->name('manifest.update');
     Route::post('/manifest', [ManifestController::class, 'send'])->name('manifest.send');
+    Route::post('/manifest-restore', [ManifestController::class, 'restore'])->name('manifest.restore');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

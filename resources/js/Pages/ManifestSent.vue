@@ -53,7 +53,7 @@ const headers: Header[] = [
 ];
 
 const openManifestItem = ref(false);
-const sendManifestConfirm = ref(false);
+const restoreManifestConfirm = ref(false);
 const updateManifestItem = (item) => {
     form.id = item.id;
     form.description = item.description;
@@ -66,7 +66,7 @@ const updateManifestItem = (item) => {
 
 const closeModal = () => {
     openManifestItem.value = false;
-    sendManifestConfirm.value = false;
+    restoreManifestConfirm.value = false;
 };
 
 const addRow = () => {
@@ -90,7 +90,7 @@ const submit = () => {
         onSuccess: () => {
             form.reset()
             openManifestItem.value = false;
-            sendManifestConfirm.value = false;
+            restoreManifestConfirm.value = false;
         }
     });
 }
@@ -109,17 +109,16 @@ const submitManifest = (item) => {
     var date = new Date();
     
     return new Promise((res, rej) => {
-        axios.post('/manifest', form, { responseType: 'blob'}).then((response) => {
-            const filename = 'manifest_data_'+date+'.xlsx';
-            const blob = new Blob([response.data], { type: 'application/vnd.ms-excel' });
-            saveAs(blob, filename);
+        axios.post('/manifest-restore', form).then((response) => {
+            // const filename = 'manifest_data_'+date+'.xlsx';
+            // const blob = new Blob([response.data], { type: 'application/vnd.ms-excel' });
+            // saveAs(blob, filename);
             form.reset();
             selectedItems.value = [];
             openManifestItem.value = false;
-            sendManifestConfirm.value = false;
-            res(response.data);
+            restoreManifestConfirm.value = false;
             //refresh the component
-            form.get(route('manifest'), {
+            form.get(route('manifest.sent'), {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
@@ -193,14 +192,14 @@ const total = () => {
                         </div>
 
                         <div class="m-6 pt-6" v-if="selectedItems.length">
-                            <PrimaryButton @click="sendManifestConfirm = true"> Send Selected Manifest </PrimaryButton>
+                            <PrimaryButton @click="restoreManifestConfirm = true"> Restore Selected Manifest </PrimaryButton>
 
-                            <Modal :show="sendManifestConfirm" @close="closeModal">
+                            <Modal :show="restoreManifestConfirm" @close="closeModal">
                                 <div class="p-6">
 
                                     <div class="mt-6">
 
-                                        <h1>Are you sure you want to send the selected manifest?</h1>
+                                        <h1>Are you sure you want to restore the selected manifest?</h1>
                                         
                                     </div>
 
