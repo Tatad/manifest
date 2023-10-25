@@ -26,19 +26,24 @@ use Inertia\Inertia;
 //     ]);
 // });
 
-Route::get('/', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('home');
+// Route::get('/', function () {
+//     return Inertia::render('Dashboard');
+// })->middleware(['auth', 'verified'])->name('home');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/', [ManifestController::class, 'manifest'])->name('home');
     Route::get('/manifest', [ManifestController::class, 'manifest'])->name('manifest');
     Route::get('/manifest-sent', [ManifestController::class, 'manifestSent'])->name('manifest.sent');
 
+
+    Route::post('/manifest-download-pdf', [ManifestController::class, 'pdfManifest'])->name('manifest.pdf');
+
     Route::get('/manifest-data', [ManifestController::class, 'manifestData'])->name('manifestData');
+    Route::get('/pallets', [ManifestController::class, 'pallets'])->name('pallets');
     Route::post('/manifest-upload', [ManifestController::class, 'updload'])->name('manifest.upload');
     Route::patch('/manifest', [ManifestController::class, 'update'])->name('manifest.update');
     Route::post('/manifest', [ManifestController::class, 'send'])->name('manifest.send');

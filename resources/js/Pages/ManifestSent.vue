@@ -14,7 +14,6 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextArea from '@/Components/TextArea.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import { saveAs } from 'file-saver';
-import moment from 'moment';
 
 defineProps({
     manifests: {

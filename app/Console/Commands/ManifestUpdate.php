@@ -73,9 +73,9 @@ class ManifestUpdate extends Command
             echo 'Response Body: ' . $response . PHP_EOL;
             $res = json_decode($response,true);
             if($res['title'] != ""){
-                Manifest::where('item', $key)->update(['item_name' => $res['title'], 'images' => $res['images']['src']]);
+                Manifest::where('item', $key)->update(['description' => $res['title'],'item_name' => json_encode($res['title']), 'images' => json_encode($res['images']['src'])]);
             }else{
-                Manifest::where('item', $key)->update(['item_name' => 'not_available', 'images' => 'not_available']);
+                Manifest::where('item', $key)->update(['item_name' => json_encode('not_available'), 'images' => json_encode('not_available')]);
             }
             $results[] = $res;
             // close curl resource to free up system resources
