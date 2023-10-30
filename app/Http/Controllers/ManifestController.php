@@ -99,6 +99,7 @@ class ManifestController extends Controller
                     'item' => $itemData->item,
                     'quantity' => $count, 
                     'id' => $itemData->id, 
+                    'dataId' => $itemData->id, 
                     'pallet' => $itemData->pallet,
                     'description' => $itemData->description,
                     'msrp' => $itemData->msrp,
@@ -136,12 +137,13 @@ class ManifestController extends Controller
                     'item' => $itemData->item,
                     'quantity' => $count, 
                     'id' => $itemData->id, 
+                    'dataId' => $itemData->id, 
                     'pallet' => $itemData->pallet,
                     'description' => $itemData->description,
                     'msrp' => $itemData->msrp,
                     'features' => $itemData->features,
                     'item_name' => $itemData->item_name,
-                    'images' => $itemData->images,
+                    'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
                     'costcoUrl' => $itemData->item_name,
                     'totalMsrp' => round(($count * $itemData->msrp),2)
                 ]; 
@@ -149,16 +151,32 @@ class ManifestController extends Controller
             return collect($collectedData)->values();
         })->values()->toArray();
         $newArray = call_user_func_array('array_merge', $manifestData);
+
+        //get available pallets
+        $pallets = DB::table('manifests')
+                 ->select('pallet')
+                 ->where('status','=',1)
+                 ->groupBy('pallet')
+                 ->get();
+
         return Inertia::render('ManifestSent', [
-            'manifests' => collect($newArray)->values()->toArray()
+            'manifests' => collect($newArray)->values()->toArray(),
+            'pallets'   => collect($pallets)->filter()->values()->toArray()
         ]);
     }
 
     public function pdfManifest(Request $request){
         $input = $request->all()['form'];
 
-        $manifests = Manifest::whereIn('item', $input['selected'])->get()->groupBy('pallet');
+        $items = [];
+        $pallets = [];
+        foreach($input['selected'] as $key => $item){
+            $items[] = $item['item'];
+            $pallets[] = $item['pallet'];
+        }
+        $manifests = Manifest::whereIn('item', $items)->whereIn('pallet', $pallets)->get()->groupBy('pallet');
         $manifestData = collect($manifests)->map(function ($data){
+            //dd(collect($data)->groupBy('item'));
             $collectedData = collect($data)->groupBy('item')->map(function($d){
                 $count = collect($d)->groupBy('item')->map->count()->values()->first();
                 $itemData = ($d)->first();
@@ -180,6 +198,12 @@ class ManifestController extends Controller
         })->values()->toArray();
         $newArray = call_user_func_array('array_merge', $manifestData);
         $pdf = \Pdf::loadView('pdf.download', ['data' => collect($newArray)->values()->toArray()]);
+
+        //update manifest
+        foreach($input['selected'] as $selected){
+            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1]);
+        }
+
         return $pdf->stream('download.pdf');
     }
 
@@ -201,10 +225,22 @@ class ManifestController extends Controller
 
     public function send(Request $request){
         $input = $request->all();
+       
+        foreach($input['selected'] as $selected){
+            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1]);
+        }
 
-        $manifest = Manifest::whereIn('item', $input['selected'])->update(['status' => 1]);
+        $items = [];
+        $pallets = [];
+        foreach($input['selected'] as $key => $item){
+            $items[] = $item['item'];
+            $pallets[] = $item['pallet'];
+        }
+        $manifests = Manifest::whereIn('item', $items)->whereIn('pallet', $pallets)->get()->groupBy('pallet');
+
         $export = new ManifestExport(
-            $input['selected']
+            $items,
+            $pallets
         );
 
         return \Excel::download($export, 'manifest.xlsx');
@@ -224,7 +260,6 @@ class ManifestController extends Controller
                  ->groupBy('pallet')
                  ->get();
         return collect($manifests)->filter()->values()->toArray();
-        dd();
         $manifestData = collect($manifests)->map(function ($data){
             $collectedData = collect($data)->groupBy('item')->map(function($d){
                 $count = collect($d)->groupBy('item')->map->count()->values()->first();

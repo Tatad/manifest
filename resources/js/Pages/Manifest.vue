@@ -26,6 +26,7 @@ const props = defineProps({
 
 const manifestData = ref(props.manifests)
 const selectedItems = ref<Item[]>([]);
+const dataTable = ref();
 const type = ref('');
 
 const searchValue = ref("");
@@ -44,15 +45,15 @@ const form = useForm({
 const favouriteSportCriteria = ref('all');
 
 const filterOptions = computed((): FilterOption[] => {
-  const filterOptionsArray: FilterOption[] = [];
-  if (favouriteSportCriteria.value !== 'all') {
-    console.log(favouriteSportCriteria.value)
-    filterOptionsArray.push({
-      field: 'pallet',
-      comparison: '=',
-      criteria: favouriteSportCriteria.value,
-    });
-  }
+    selectedItems.value = []
+    const filterOptionsArray: FilterOption[] = [];
+    if (favouriteSportCriteria.value !== 'all') {
+        filterOptionsArray.push({
+          field: 'pallet',
+          comparison: '=',
+          criteria: favouriteSportCriteria.value,
+        });
+    }
   return filterOptionsArray;
 });
 
@@ -115,11 +116,33 @@ const submit = () => {
     });
 }
 
+function padTo2Digits(num) {
+  return num.toString().padStart(2, '0');
+}
+
+function formatDate(date) {
+  return (
+    [
+      date.getFullYear(),
+      padTo2Digits(date.getMonth() + 1),
+      padTo2Digits(date.getDate()),
+    ].join('-') +
+    ' ' +
+    [
+      padTo2Digits(date.getHours()),
+      padTo2Digits(date.getMinutes()),
+      padTo2Digits(date.getSeconds()),
+    ].join(':')
+  );
+}
+
+var zone = new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
+
 const submitManifest = (item) => {
     let selectedItemNumber = [];
     if(selectedItems.value){
         selectedItems.value.forEach(val => {
-            selectedItemNumber.push(val.item);
+            selectedItemNumber.push({"item": val.item, "pallet" : val.pallet});
            //or if you pass float numbers , use parseFloat()
         });
     }
@@ -130,7 +153,7 @@ const submitManifest = (item) => {
     
     return new Promise((res, rej) => {
         axios.post('/manifest', form, { responseType: 'blob'}).then((response) => {
-            const filename = 'manifest_data_'+date+'.xlsx';
+            const filename = 'manifest_data_'+formatDate(date)+' '+zone+'.xlsx';
             const blob = new Blob([response.data], { type: 'application/vnd.ms-excel' });
             saveAs(blob, filename);
             form.reset();
@@ -187,7 +210,7 @@ const downloadManifestPdf = (item) => {
     let selectedItemNumber = [];
     if(selectedItems.value){
         selectedItems.value.forEach(val => {
-            selectedItemNumber.push(val.item);
+            selectedItemNumber.push({"item": val.item, "pallet" : val.pallet});
            //or if you pass float numbers , use parseFloat()
         });
     }
@@ -203,7 +226,7 @@ const downloadManifestPdf = (item) => {
             params: {form: form},
             responseType: 'blob', // important
         }).then((response) => {
-            const filename = 'manifest_data_'+date+'.pdf';
+            const filename = 'manifest_data_'+formatDate(date)+' '+zone+'.pdf';
             const blob = new Blob([response.data], { type: 'application/pdf' });
             saveAs(blob, filename);
             form.reset();
@@ -222,6 +245,50 @@ const downloadManifestPdf = (item) => {
         });
     });
 }
+//let results = ref([]);
+//const results = ref([]);
+let totalVal = ref(0);
+const clientItemsLength = computed(() => dataTable.value?.clientItems);
+const filterHandler = (e) =>{
+    let basket_total = 0;
+    totalVal.value = 0;
+    selectedItems.value = []
+    let results = []
+    console.log(searchValue.value)
+    if(searchValue.value != ""){
+        let filterData = manifestData.value.filter(function(data) {
+            let transformedId = data.id.toString();
+            let transformedMsrp = data.msrp.toString();
+            if(data.item.match(searchValue.value)){
+                //console.log(data)
+                results.push(data)
+            }
+
+            if(data.pallet.match(searchValue.value)){
+                //console.log(data)
+                results.push(data)
+            }
+
+            if(transformedId.match(parseInt(searchValue.value))){
+                results.push(data)
+            }
+            if(transformedMsrp.match(searchValue.value)){
+                results.push(data)
+            }
+        });
+        const uniq = [...new Set(results)];
+
+        uniq.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
+        totalVal.value = basket_total.toFixed(2);
+    }else{
+        manifestData.value.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
+         totalVal.value = basket_total.toFixed(2);
+    }
+}
 
 </script>
 
@@ -235,7 +302,7 @@ const downloadManifestPdf = (item) => {
 
         <div class="py-12">
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
                     <div class="grid grid-cols-3 gap-3">
                         <div class="m-6">
@@ -244,9 +311,10 @@ const downloadManifestPdf = (item) => {
                             <TextInput
                                 id="search"
                                 v-model="searchValue"
-                                type="readonly"
+                                type="search"
                                 class="border-solid border-2 border-black-600 p-2 mt-1 block"
                                 placeholder="Search here..."
+                                @input="filterHandler"
                             />
 
                             
@@ -282,15 +350,15 @@ const downloadManifestPdf = (item) => {
                             </Modal>
                         </div>
                     </div>
-                    
-                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Total: ${{ total() }}</h3>
-                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Grand Total: ${{ grandTotal() }}</h3>
+                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Selected Total: ${{ total() }}</h3>
+                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Total: ${{ totalVal }}</h3>
                    <EasyDataTable
                         :headers="headers"
                         :items="manifests"
                         :search-value="searchValue"
                         v-model:items-selected="selectedItems"
                         :filter-options="filterOptions"
+                        ref="dataTable"
                       >
                         <template #header-pallet="header">
                           <div class="filter-column">

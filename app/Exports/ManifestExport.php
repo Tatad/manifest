@@ -9,21 +9,22 @@ use Illuminate\Support\Facades\DB;
 
 class ManifestExport implements FromCollection, WithHeadings
 {
-    protected $manifests;
+    protected $item;
+    protected $pallet;
 
-    public function __construct(array $manifests)
+    public function __construct(array $item, array $pallet)
     {
-        $this->manifests = $manifests;
+        $this->item = $item;
+        $this->pallet = $pallet;
     }
 
     public function collection()
     {
-    	//$manifestData = Manifest::whereIn('id', $this->manifests)->get();
     	$manifestData = DB::table('manifests')
             ->select('item', 'description', 'msrp', 'pallet')
-            ->whereIn('item', $this->manifests)
+            ->whereIn('item', $this->item)
+            ->whereIn('pallet', $this->pallet)
             ->get();
-    	// dd($manifestData);
         return $manifestData;
     }
 
