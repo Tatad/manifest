@@ -24,6 +24,7 @@ defineProps({
 // const sortBy = "id";
 // const sortType: SortType = "desc";
 
+const selectedItems = ref<Item[]>([]);
 const searchValue = ref("");
 
 const form = useForm({
@@ -38,7 +39,6 @@ const form = useForm({
 });
   
 const headers: Header[] = [
-  { text: "", value: "selected" },
   { text: "ID", value: "id", sortable: true },
   { text: "Item #", value: "item", sortable: true},
   { text: "Description", value: "description", sortable: true},
@@ -142,7 +142,6 @@ let onChange = (event) => {
     }
 }
 
-const selectedItems = ref([])
 
 const total = () => {
     let basket_total = 0;
@@ -217,13 +216,14 @@ const total = () => {
                         :headers="headers"
                         :items="manifests"
                         :search-value="searchValue"
+                        v-model:items-selected="selectedItems"
                       >
 
-                        <template #item-selected="item">
+                      <!--   <template #item-selected="item">
                             <div class="customize-header">
                                 <input type="checkbox" v-model="selectedItems" :value="item">
                             </div>
-                        </template>
+                        </template> -->
 
                         <template #item-images="item">
                             <div class="customize-header">

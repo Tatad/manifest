@@ -44,19 +44,6 @@ const form = useForm({
 
 const favouriteSportCriteria = ref('all');
 
-const filterOptions = computed((): FilterOption[] => {
-    selectedItems.value = []
-    const filterOptionsArray: FilterOption[] = [];
-    if (favouriteSportCriteria.value !== 'all') {
-        filterOptionsArray.push({
-          field: 'pallet',
-          comparison: '=',
-          criteria: favouriteSportCriteria.value,
-        });
-    }
-  return filterOptionsArray;
-});
-
 const showFavouriteSportFilter = ref(false);
   
 const headers: Header[] = [
@@ -245,16 +232,15 @@ const downloadManifestPdf = (item) => {
         });
     });
 }
-//let results = ref([]);
-//const results = ref([]);
-let totalVal = ref(0);
+
+let totalVal = ref(manifestData.value.reduce((total, obj) => obj.totalMsrp + total,0).toFixed(2));
 const clientItemsLength = computed(() => dataTable.value?.clientItems);
 const filterHandler = (e) =>{
     let basket_total = 0;
     totalVal.value = 0;
     selectedItems.value = []
     let results = []
-    console.log(searchValue.value)
+
     if(searchValue.value != ""){
         let filterData = manifestData.value.filter(function(data) {
             let transformedId = data.id.toString();
@@ -286,8 +272,49 @@ const filterHandler = (e) =>{
         manifestData.value.forEach(val => {
             basket_total += Number(val.totalMsrp);
         });
-         totalVal.value = basket_total.toFixed(2);
+        totalVal.value = basket_total.toFixed(2);
     }
+}
+
+const filterOptions = computed((): FilterOption[] => {
+    let basket_total = 0;
+    totalVal.value = 0;
+    let results = []
+    const filterOptionsArray: FilterOption[] = [];
+    if (favouriteSportCriteria.value !== 'all') {
+        filterOptionsArray.push({
+          field: 'pallet',
+          comparison: '=',
+          criteria: favouriteSportCriteria.value,
+        });
+    }
+    if(favouriteSportCriteria.value !== 'all'){
+
+    
+        manifestData.value.filter(function(data) {
+
+            if(data.pallet.match(favouriteSportCriteria.value)){
+                //console.log(data)
+                results.push(data)
+            }
+        });
+        const uniq = [...new Set(results)];
+        uniq.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
+        totalVal.value = basket_total.toFixed(2);
+    }else{
+        manifestData.value.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
+        totalVal.value = basket_total.toFixed(2);
+    }
+
+  return filterOptionsArray;
+});
+
+const resetHandler = () => {
+    selectedItems.value = []
 }
 
 </script>
@@ -328,7 +355,7 @@ const filterHandler = (e) =>{
                             <InputLabel class="mb-2" for="search" value="Download Manifest"/>
                             <PrimaryButton v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'CSV'"> Download Manifest(CSV) </PrimaryButton>
                             <PrimaryButton class="ml-1" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'PDF'"> Download Manifest(PDF) </PrimaryButton>
-                                <button class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-500 dark:hover:bg-white focus:bg-gray-500 dark:focus:bg-white active:bg-gray-400 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" v-if="selectedItems.length == 0"> Download Selected Manifest </button>
+                                <button class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-500 dark:hover:bg-gray-500 dark:hover:text-white focus:bg-gray-500 dark:focus:bg-white active:bg-gray-400 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" v-if="selectedItems.length == 0"> Download Selected Manifest </button>
 
                             <Modal :show="sendManifestConfirm" @close="closeModal">
                                 <div class="p-6">
@@ -372,6 +399,7 @@ const filterHandler = (e) =>{
                                 class="favouriteSport-selector"
                                 v-model="favouriteSportCriteria"
                                 name="pallet"
+                                @change="resetHandler"
                               >
                                 <option v-for="pallet in pallets" :value="pallet.pallet">
                                   {{pallet.pallet}}
@@ -461,14 +489,6 @@ const filterHandler = (e) =>{
                 <div class="mt-6">
                     <InputLabel for="pallet" value="Palet Number"/>
 
-                    <!-- <TextInput
-                        id="pallet"
-                        v-model="form.pallet"
-                        type="readonly"
-                        class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                        placeholder="Palet Number"
-                    /> -->
-
                     <input type="text" readonly v-model="form.pallet" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4">
 
                     <InputError :message="form.errors.pallet" class="mt-2" />
@@ -492,19 +512,6 @@ const filterHandler = (e) =>{
                     
 
                 </div>
-                <!-- <div class="mt-6">
-                    <label class="fileContainer">
-                       Image URL
-                    </label>
-
-                    <TextInput
-                        id="image"
-                        v-model="form.images"
-                        type="text"
-                        class="mt-1 block w-3/4"
-                        placeholder="Image URL"
-                    /> 
-                </div> -->
 
                 <div class="mt-6">
                     <InputLabel for="features" value="Features"/>
