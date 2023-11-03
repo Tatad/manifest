@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RegistrationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -34,10 +35,16 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/account', [RegistrationController::class, 'create'])->name('account');
+Route::post('/account', [RegistrationController::class, 'store'])->name('account.store');
+Route::post('/authenticate', [RegistrationController::class, 'authenticate'])->name('authenticate');
+
 Route::middleware('auth')->group(function () {
     Route::get('/', [ManifestController::class, 'manifest'])->name('home');
     Route::get('/manifest', [ManifestController::class, 'manifest'])->name('manifest');
     Route::get('/manifest-sent', [ManifestController::class, 'manifestSent'])->name('manifest.sent');
+    Route::post('/manifest-download-batch-pdf', [ManifestController::class, 'batchDownloadPdf'])->name('manifest.batchPdf');
+    Route::post('/manifest-download-batch-csv', [ManifestController::class, 'batchDownloadCsv'])->name('manifest.batchCsv');
 
 
     Route::post('/manifest-download-pdf', [ManifestController::class, 'pdfManifest'])->name('manifest.pdf');

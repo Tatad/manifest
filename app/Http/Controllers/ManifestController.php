@@ -15,6 +15,7 @@ use App\Models\Manifest;
 use App\Imports\ManifestImport;
 use App\Exports\ManifestExport;
 use DB;
+use Carbon\Carbon;
 
 class ManifestController extends Controller
 {
@@ -135,6 +136,8 @@ class ManifestController extends Controller
                 $itemData = ($d)->first();
                 return [
                     'item' => $itemData->item,
+                    'download_group_id' => $itemData->download_group_id,
+                    'downloaded_at' => $itemData->downloaded_at,
                     'quantity' => $count, 
                     'id' => $itemData->id, 
                     'dataId' => $itemData->id, 
@@ -158,15 +161,17 @@ class ManifestController extends Controller
                  ->where('status','=',1)
                  ->groupBy('pallet')
                  ->get();
-
+        //dd(collect($newArray)->groupBy('download_group_id')->values()->toArray());
         return Inertia::render('ManifestSent', [
-            'manifests' => collect($newArray)->values()->toArray(),
+            //'manifests' => collect($newArray)->values()->toArray(),
+            'manifests'  => collect($newArray)->groupBy('download_group_id')->values()->toArray(),
             'pallets'   => collect($pallets)->filter()->values()->toArray()
         ]);
     }
 
     public function pdfManifest(Request $request){
         $input = $request->all()['form'];
+        $downloadId = DB::table('manifests')->latest('download_group_id')->first();
 
         $items = [];
         $pallets = [];
@@ -201,7 +206,7 @@ class ManifestController extends Controller
 
         //update manifest
         foreach($input['selected'] as $selected){
-            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1]);
+            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1, 'downloaded_at' => Carbon::now() ,'download_group_id' => ($downloadId->download_group_id + 1)]);
         }
 
         return $pdf->stream('download.pdf');
@@ -226,8 +231,9 @@ class ManifestController extends Controller
     public function send(Request $request){
         $input = $request->all();
        
+        $downloadId = DB::table('manifests')->latest('download_group_id')->first();
         foreach($input['selected'] as $selected){
-            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1]);
+            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1, 'downloaded_at' => Carbon::now(), 'download_group_id' => ($downloadId->download_group_id + 1)]);
         }
 
         $items = [];
@@ -246,10 +252,73 @@ class ManifestController extends Controller
         return \Excel::download($export, 'manifest.xlsx');
     }
 
+    public function batchDownloadCsv(Request $request){
+        $input = $request->all();
+        $manifests = Manifest::where('download_group_id', $input['selected'])->get();
+
+       
+
+        $results = DB::table('manifests')
+                 ->select('item','pallet')
+                 ->where('download_group_id','=',$input['selected'])
+                 ->groupBy('pallet')
+                 ->get();
+        
+
+        $items = [];
+        $pallets = [];
+        foreach($manifests as $key => $item){
+            $items[] = $item['item'];
+            $pallets[] = $item['pallet'];
+        }
+
+        $export = new ManifestExport(
+            $items,
+            $pallets
+        );
+
+        return \Excel::download($export, 'manifest.csv');
+    }
+
+    public function batchDownloadPdf(Request $request){
+        $input = $request->all();
+        $downloadId = DB::table('manifests')->latest('download_group_id')->first();
+
+        $items = [];
+        $pallets = [];
+
+        $manifests = Manifest::where('download_group_id', $input['selected'])->get()->groupBy('pallet');
+        $manifestData = collect($manifests)->map(function ($data){
+            //dd(collect($data)->groupBy('item'));
+            $collectedData = collect($data)->groupBy('item')->map(function($d){
+                $count = collect($d)->groupBy('item')->map->count()->values()->first();
+                $itemData = ($d)->first();
+                return [
+                    'item' => $itemData->item,
+                    'quantity' => $count, 
+                    'id' => $itemData->id, 
+                    'pallet' => $itemData->pallet,
+                    'description' => $itemData->description,
+                    'msrp' => $itemData->msrp,
+                    'features' => $itemData->features,
+                    'item_name' => $itemData->item_name,
+                    'images' => $itemData->images,
+                    'costcoUrl' => $itemData->item_name,
+                    'totalMsrp' => round(($count * $itemData->msrp),2)
+                ]; 
+            });
+            return collect($collectedData)->values();
+        })->values()->toArray();
+        $newArray = call_user_func_array('array_merge', $manifestData);
+        $pdf = \Pdf::loadView('pdf.download', ['data' => collect($newArray)->values()->toArray()]);
+
+        return $pdf->stream('download.pdf');
+    }
+
     public function restore(Request $request){
         $input = $request->all();
-
-        $manifest = Manifest::whereIn('item', $input['selected'])->update(['status' => 0]);
+        //dd($input);
+        $manifest = Manifest::where('download_group_id', $input['selected'])->update(['status' => 0]);
         return 'success';
     }
 

@@ -140,7 +140,7 @@ const submitManifest = (item) => {
     
     return new Promise((res, rej) => {
         axios.post('/manifest', form, { responseType: 'blob'}).then((response) => {
-            const filename = 'manifest_data_'+formatDate(date)+' '+zone+'.xlsx';
+            const filename = 'manifest_data_'+formatDate(date)+' '+zone+'.csv';
             const blob = new Blob([response.data], { type: 'application/vnd.ms-excel' });
             saveAs(blob, filename);
             form.reset();
@@ -386,6 +386,7 @@ const resetHandler = () => {
                         v-model:items-selected="selectedItems"
                         :filter-options="filterOptions"
                         ref="dataTable"
+                        :rows-items="[25,50,100,manifestData.length]"
                       >
                         <template #header-pallet="header">
                           <div class="filter-column">
@@ -448,6 +449,8 @@ const resetHandler = () => {
                             <PrimaryButton @click="updateManifestItem(item)"> Edit </PrimaryButton>
                             </div>
                         </template>
+
+
                     </EasyDataTable>
                     
                 </div>
