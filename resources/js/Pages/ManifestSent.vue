@@ -265,6 +265,10 @@ const saveManifestName = () => {
                             {{item.downloaded_at}}
                         </template>
 
+                        <template #item-group_name="item">
+                            <p v-if="item.group_name">{{item.group_name}}</p><p v-else>N/A</p>
+                        </template>
+
                         <template #item-sum="item">
                             ${{item.sum.toFixed(2)}}
                         </template>
