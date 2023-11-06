@@ -341,7 +341,7 @@ const filterToggle = ref(false);
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
-                    <div class="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-2 xs:grid-cols-1">
+                    <div class="grid grid-cols-4 gap-2 xl:grid-cols-4 xl:gap-2 sm:grid-cols-2 sm:gap-2 xs:grid-cols-1">
                         <div class="sm:w-full m-6">
                             <InputLabel for="search" value="Filter Search"/>
 

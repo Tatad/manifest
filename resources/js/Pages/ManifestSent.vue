@@ -323,7 +323,7 @@ const saveManifestName = () => {
                         v-model="form.group_name"
                         type="readonly"
                         class="border-solid border-2 border-black-600 p-2 mt-1 block block block w-full"
-                        placeholder="Item Number"
+                        placeholder="Manifest Name"
                     />
                     
                 </div>
