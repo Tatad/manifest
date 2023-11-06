@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m';
 import Vue3EasyDataTable from 'vue3-easy-data-table';
 import 'vue3-easy-data-table/dist/style.css';
+import Notifications from '@kyvg/vue3-notification'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -22,6 +23,7 @@ createInertiaApp({
 
         const app =  createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(Notifications)
             .use(ZiggyVue, Ziggy)
             .component('EasyDataTable', Vue3EasyDataTable)
 

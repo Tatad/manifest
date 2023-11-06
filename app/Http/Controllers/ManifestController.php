@@ -128,44 +128,60 @@ class ManifestController extends Controller
         ]);
     }
 
-    public function manifestSent(Request $request){
-        $manifests = Manifest::where(['status' => 1])->get()->groupBy('pallet');
-        $manifestData = collect($manifests)->map(function ($data){
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData->item,
-                    'download_group_id' => $itemData->download_group_id,
-                    'downloaded_at' => $itemData->downloaded_at,
-                    'quantity' => $count, 
-                    'id' => $itemData->id, 
-                    'dataId' => $itemData->id, 
-                    'pallet' => $itemData->pallet,
-                    'description' => $itemData->description,
-                    'msrp' => $itemData->msrp,
-                    'features' => $itemData->features,
-                    'item_name' => $itemData->item_name,
-                    'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
-                    'costcoUrl' => $itemData->item_name,
-                    'totalMsrp' => round(($count * $itemData->msrp),2)
-                ]; 
-            });
-            return collect($collectedData)->values();
-        })->values()->toArray();
-        $newArray = call_user_func_array('array_merge', $manifestData);
+    // public function manifestSent(Request $request){
+    //     $manifests = Manifest::where(['status' => 1])->get()->groupBy('pallet');
+    //     $manifestData = collect($manifests)->map(function ($data){
+    //         $collectedData = collect($data)->groupBy('item')->map(function($d){
+    //             $count = collect($d)->groupBy('item')->map->count()->values()->first();
+    //             $itemData = ($d)->first();
+    //             return [
+    //                 'item' => $itemData->item,
+    //                 'download_group_id' => $itemData->download_group_id,
+    //                 'group_name' => $itemData->group_name,
+    //                 'downloaded_at' => $itemData->downloaded_at,
+    //                 'quantity' => $count, 
+    //                 'id' => $itemData->id, 
+    //                 'dataId' => $itemData->id, 
+    //                 'pallet' => $itemData->pallet,
+    //                 'description' => $itemData->description,
+    //                 'msrp' => $itemData->msrp,
+    //                 'features' => $itemData->features,
+    //                 'item_name' => $itemData->item_name,
+    //                 'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
+    //                 'costcoUrl' => $itemData->item_name,
+    //                 'totalMsrp' => round(($count * $itemData->msrp),2)
+    //             ]; 
+    //         });
+    //         return collect($collectedData)->values();
+    //     })->values()->toArray();
+    //     $newArray = call_user_func_array('array_merge', $manifestData);
 
-        //get available pallets
-        $pallets = DB::table('manifests')
-                 ->select('pallet')
-                 ->where('status','=',1)
-                 ->groupBy('pallet')
-                 ->get();
-        //dd(collect($newArray)->groupBy('download_group_id')->values()->toArray());
+    //     return Inertia::render('ManifestSent', [
+    //         //'manifests' => collect($newArray)->values()->toArray(),
+    //         'manifests'  => collect($newArray)->groupBy('download_group_id')->values()->toArray()
+    //     ]);
+    // }
+
+    public function manifestSent(Request $request){
+        $manifests = Manifest::where(['status' => 1])->get()->groupBy('download_group_id');
+        $manifestData = [];
+        foreach(collect($manifests)->values()->toArray() as $data){
+            $sum = 0;
+            foreach($data as $val){
+                $sum += $val['total'];
+            }
+            $manifestData[] = [
+                'group_id' => $data[0]['download_group_id'],
+                'downloaded_at' => $data[0]['downloaded_at'],
+                'group_name' => $data[0]['group_name'],
+                'sum' => $sum,
+                'data' => $data
+            ];
+        }
+        //dd($manifestData);
         return Inertia::render('ManifestSent', [
             //'manifests' => collect($newArray)->values()->toArray(),
-            'manifests'  => collect($newArray)->groupBy('download_group_id')->values()->toArray(),
-            'pallets'   => collect($pallets)->filter()->values()->toArray()
+            'manifests'  => collect($manifestData)->values()->toArray()
         ]);
     }
 
@@ -343,6 +359,15 @@ class ManifestController extends Controller
         return Inertia::render('ManifestSent', [
             'manifests' => collect($newArray)->values()->toArray()
         ]);
+    }
+
+    public function addManifestName(Request $request){
+        $input = $request->all();
+        //dd($input);
+        if($input['download_group_id']){
+            Manifest::where('download_group_id', $input['download_group_id'])->update(['group_name' => $input['group_name']]);
+        }
+        return 'success';
     }
 }
 

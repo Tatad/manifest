@@ -92,7 +92,6 @@ const setFilename = (event, row) => {
 }
 
 const submit = () => {
-    console.log('submitted')
     form.patch(route('manifest.update'), {
         preserveScroll: true,
         onSuccess: () => {
@@ -281,6 +280,15 @@ const filterOptions = computed((): FilterOption[] => {
     totalVal.value = 0;
     let results = []
     const filterOptionsArray: FilterOption[] = [];
+    if(filterToggle.value == true){
+        console.log('here')
+        filterOptionsArray.push({
+          field: 'costcoUrl',
+          comparison: '!=',
+          criteria: 'not_available',
+        });
+    }
+
     if (favouriteSportCriteria.value !== 'all') {
         filterOptionsArray.push({
           field: 'pallet',
@@ -317,6 +325,8 @@ const resetHandler = () => {
     selectedItems.value = []
 }
 
+const filterToggle = ref(false);
+
 </script>
 
 <template>
@@ -331,20 +341,32 @@ const resetHandler = () => {
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="m-6">
+                    <div class="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-2 xs:grid-cols-1">
+                        <div class="sm:w-full m-6">
                             <InputLabel for="search" value="Filter Search"/>
 
                             <TextInput
                                 id="search"
                                 v-model="searchValue"
                                 type="search"
-                                class="border-solid border-2 border-black-600 p-2 mt-1 block"
+                                class="sm:w-3/4 xs:w-full border-solid border-2 border-black-600 p-2 mt-1 block"
                                 placeholder="Search here..."
                                 @input="filterHandler"
                             />
-
                             
+                        </div>
+                        <div class="m-4">
+                            <div class="md:flex md:items-center mb-6 mt-6">
+                                <div class="">
+                                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
+                                    Filter Item
+                                  </label>
+                                </div>
+                                <div class="md:w-2/3">
+                                  <input type="checkbox" v-model="filterToggle">
+                                </div>
+                            </div>
+
                         </div>
                         <div class="m-4">
                             <InputLabel class="mb-2" for="search" value="Upload Manifest"/>
@@ -354,7 +376,7 @@ const resetHandler = () => {
                         <div class="m-6">
                             <InputLabel class="mb-2" for="search" value="Download Manifest"/>
                             <PrimaryButton v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'CSV'"> Download Manifest(CSV) </PrimaryButton>
-                            <PrimaryButton class="ml-1" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'PDF'"> Download Manifest(PDF) </PrimaryButton>
+                            <PrimaryButton class="ml-1 sm:ml-0 sm:mt-4" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'PDF'"> Download Manifest(PDF) </PrimaryButton>
                                 <button class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-500 dark:hover:bg-gray-500 dark:hover:text-white focus:bg-gray-500 dark:focus:bg-white active:bg-gray-400 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" v-if="selectedItems.length == 0"> Download Selected Manifest </button>
 
                             <Modal :show="sendManifestConfirm" @close="closeModal">

@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/manifest-sent', [ManifestController::class, 'manifestSent'])->name('manifest.sent');
     Route::post('/manifest-download-batch-pdf', [ManifestController::class, 'batchDownloadPdf'])->name('manifest.batchPdf');
     Route::post('/manifest-download-batch-csv', [ManifestController::class, 'batchDownloadCsv'])->name('manifest.batchCsv');
+    Route::post('/manifest-add-name', [ManifestController::class, 'addManifestName'])->name('manifest.addManifestName');
 
 
     Route::post('/manifest-download-pdf', [ManifestController::class, 'pdfManifest'])->name('manifest.pdf');

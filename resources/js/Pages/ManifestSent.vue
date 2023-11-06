@@ -14,9 +14,14 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextArea from '@/Components/TextArea.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import { saveAs } from 'file-saver';
+import { useNotification } from "@kyvg/vue3-notification";
 
-defineProps({
+
+const props = defineProps({
     manifests: {
+        type: Array,
+    },
+    manifestSumData: {
         type: Array,
     },
 });
@@ -31,6 +36,8 @@ const searchValue = ref("");
 const form = useForm({
     id: 0,
     description: '',
+    group_name: '',
+    download_group_id: 0,
     item: '',
     pallet: 0,
     images: [],
@@ -41,7 +48,10 @@ const form = useForm({
   
 const headers: Header[] = [
   { text: "Select", value: "selected" },
-  { text: "Downloaded at", value: "downloaded_at" }
+  { text: "Downloaded at", value: "downloaded_at", sortable: true },
+  { text: "Manifest name", value: "group_name", sortable: true },
+  { text: "$ Total", value: "sum", sortable: true },
+  { text: "Action", value: "action" },
 ];
 
 const openManifestItem = ref(false);
@@ -61,7 +71,7 @@ const addRow = () => {
 const submitManifest = (item) => {
     let selectedItemNumber = [];
 
-    form.selected = selectedItems.value[0][0].download_group_id;
+    form.selected = selectedItems.value[0].group_id;
 
     var date = new Date();
     
@@ -123,7 +133,7 @@ const downloadManifest = (type) => {
     console.log(type)
     // let selectedItemNumber = [];
 
-    form.selected = selectedItems.value[0][0].download_group_id;
+    form.selected = selectedItems.value[0].group_id;
 
     var date = new Date();
 
@@ -154,7 +164,7 @@ const downloadManifest = (type) => {
             openManifestItem.value = false;
             res(response.data);
             //refresh the component
-            form.get(route('/manifest-sent'), {
+            form.get(route('manifest.sent'), {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
@@ -163,6 +173,34 @@ const downloadManifest = (type) => {
             });
         });
     });
+}
+const manifestData = ref(props.manifests)
+
+const updateManifestItem = (item) => {
+    console.log(item)
+    form.group_name = item.group_name
+    form.download_group_id = item.group_id
+    openManifestItem.value = true;
+};
+
+const name = ref('')
+const notification = useNotification()
+const saveManifestName = () => {
+    axios.post('/manifest-add-name',form).then((res) => {
+        // using options
+        notification.notify({
+          title: "",
+          text: "Manifest name successfully saved!",
+        });
+        form.get(route('manifest.sent'), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                form.reset()
+                openManifestItem.value = false;
+            }
+        });
+    })
 }
 
 </script>
@@ -174,7 +212,7 @@ const downloadManifest = (type) => {
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manifest</h2>
         </template>
-
+        <notifications />
         <div class="py-12">
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg" >
@@ -191,7 +229,6 @@ const downloadManifest = (type) => {
                                 placeholder="Search here..."
                             /> -->
 
-                            
                         </div>
 
                         <div class="m-6 pt-6" v-if="selectedItems.length">
@@ -212,7 +249,6 @@ const downloadManifest = (type) => {
                                         <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
                                         <PrimaryButton @click="submitManifest"> Submit </PrimaryButton>
 
-                                        
                                     </div>
                                 </div>
                             </Modal>
@@ -223,10 +259,22 @@ const downloadManifest = (type) => {
                         :headers="headers"
                         :items="manifests"
                         :search-value="searchValue"
+                        show-index
                       >
                         <template #item-downloaded_at="item">
-                            {{item[0].downloaded_at}}
+                            {{item.downloaded_at}}
                         </template>
+
+                        <template #item-sum="item">
+                            ${{item.sum.toFixed(2)}}
+                        </template>
+
+                        <template #item-action="item">
+                            <div class="customize-header pt-2 pb-2">
+                            <PrimaryButton @click="updateManifestItem(item)"> Update Manifest Name </PrimaryButton>
+                            </div>
+                        </template>
+
                         <template #item-selected="item">
                             <div class="customize-header">
                                 <input type="checkbox" v-model="selectedItems" :value="item">
@@ -246,7 +294,7 @@ const downloadManifest = (type) => {
                                 </thead>
 
                                 <tbody>
-                                    <tr v-for="data in item" class="text-white bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <tr v-for="data in item.data" class="text-white bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                         <td class="px-6 py-3">{{data.id}}</td>
                                         <td class="px-6 py-3">{{data.item}}</td>
                                         <td class="px-6 py-3">{{data.description}}</td>
@@ -268,85 +316,21 @@ const downloadManifest = (type) => {
             <div class="p-6">
 
                 <div class="mt-6">
-                    <InputLabel for="item" value="Item Number"/>
+                    <InputLabel for="item" value="Manifest Name"/>
 
                     <TextInput
                         id="item"
-                        v-model="form.item"
+                        v-model="form.group_name"
                         type="readonly"
-                        class="border-solid border-2 border-black-600 p-2 mt-1 block block block w-3/4"
+                        class="border-solid border-2 border-black-600 p-2 mt-1 block block block w-full"
                         placeholder="Item Number"
                     />
-
-                    <InputError :message="form.errors.item" class="mt-2" />
-                    
-                </div>
-
-                <div class="mt-6">
-                    <InputLabel for="description" value="Description"/>
-
-                    <TextInput
-                        id="description"
-                        v-model="form.description"
-                        type="readonly"
-                        class="border-solid border-2 border-black-600 p-2 mt-1 block block block w-3/4"
-                        placeholder="Description"
-                    />
-
-                    <InputError :message="form.errors.description" class="mt-2" />
-                    
-                </div>
-
-                <div class="mt-6">
-                    <InputLabel for="pallet" value="Palet Number"/>
-
-                    <TextInput
-                        id="pallet"
-                        v-model="form.pallet"
-                        type="readonly"
-                        class="border-solid border-2 border-black-600 p-2 mt-1 block block block w-3/4"
-                        placeholder="Palet Number"
-                    />
-
-                    <InputError :message="form.errors.pallet" class="mt-2" />
-                    
-                </div>
-
-                <button class="button btn-primary" @click="addRow">Add row</button>
-
-                
-                <div class="mt-6">
-                    <label class="fileContainer">
-                       Image URL
-                    </label>
-
-                    <TextInput
-                        id="image"
-                        v-model="form.images"
-                        type="text"
-                        class="mt-1 block w-3/4"
-                        placeholder="Image URL"
-                    />
-                </div>
-
-                <div class="mt-6">
-                    <InputLabel for="features" value="Features"/>
-
-                    <TextArea
-                        id="features"
-                        v-model="form.features"
-                        type="text"
-                        class="mt-1 block w-3/4"
-                        placeholder="Features"
-                    />
-
-                    <InputError :message="form.errors.features" class="mt-2" />
                     
                 </div>
 
                 <div class="mt-6 flex justify-end">
                     <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
-                    <PrimaryButton @click="submit"> Submit </PrimaryButton>
+                    <PrimaryButton @click="saveManifestName"> Submit </PrimaryButton>
 
                     
                 </div>
