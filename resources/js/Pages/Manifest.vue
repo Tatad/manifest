@@ -438,7 +438,7 @@ const filterToggle = ref(false);
                             <div class="customize-header">
 
                                 <div v-for="image in item.images" v-if="item.images && item.images != 'not_available'">
-                                    <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="image" v-if="image && image != 'not_available'">{{$filters.truncate(image)}}</a>
+                                    <a target="_blank" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="image" v-if="image && image != 'not_available'">{{$filters.truncate(image)}}</a>
                                 </div>
                                 <span v-else-if="item.images == 'not_available'"><i class="fa fa-spin"></i>N/A</span>
                                 <span v-else>
