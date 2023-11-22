@@ -31,7 +31,7 @@ class ManifestUpdate extends Command
         // get cURL resource
         $ch = curl_init();
         //$ids = [1660896, 2127647, 1596898,1691718 ,1635441, 2349196, 1891815, 1586356, 619899, 1640734, 2622054, 1627201, 845993, 3272378, 3272379];
-        $ids = Manifest::where('item_name', '=', null)->take(1)->get()->groupBy('item');
+        $ids = Manifest::where('item_name', '=', null)->take(20)->get()->groupBy('item');
         
         //dd($ids);
         //$ids = [1660896];
