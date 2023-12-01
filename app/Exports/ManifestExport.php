@@ -21,7 +21,7 @@ class ManifestExport implements FromCollection, WithHeadings
     public function collection()
     {
     	$manifestData = DB::table('manifests')
-            ->select('item', 'description', 'msrp', 'pallet')
+            ->select('item', 'description', 'msrp', 'pallet', 'quantity', 'total')
             ->whereIn('item', $this->item)
             ->whereIn('pallet', $this->pallet)
             ->get();
@@ -30,6 +30,6 @@ class ManifestExport implements FromCollection, WithHeadings
 
     public function headings(): array
     {
-        return ["Item #", "Item Name", "MSRP", "Pallet #"];
+        return ["Item #", "Item Name", "MSRP", "Pallet #", "Quantity", "$ Total"];
     }
 }

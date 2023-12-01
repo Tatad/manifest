@@ -43,14 +43,11 @@ const form = useForm({
     images: [],
     features: '',
     selected: [],
-    file: '',
-    group_name: ''
+    file: ''
 });
   
 const headers: Header[] = [
-  { text: "Select", value: "selected" },
-  { text: "Downloaded at", value: "downloaded_at", sortable: true },
-  { text: "Manifest name", value: "group_name", sortable: true, width: 500 },
+  { text: "Pallet Number", value: "pallet", sortable: true },
   { text: "$ Total", value: "sum", sortable: true },
 ];
 
@@ -203,33 +200,6 @@ const saveManifestName = () => {
     })
 }
 
-const currentItem = ref(null)
-const clickHandler = (item) => {
-    currentItem.value = item
-    console.log(item)
-}
-
-const submitGroupNameHandler = () => {
-    form.download_group_id = currentItem.value.group_id
-    console.log(form)
-    console.log(form.group_name)
-    axios.post('/manifest-add-name',form).then((res) => {
-        // using options
-        notification.notify({
-          title: "",
-          text: "Manifest name successfully saved!",
-        });
-        form.get(route('manifest.sent'), {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                form.reset()
-                currentItem.value = '';
-            }
-        });
-    })
-}
-
 </script>
 
 <template>
@@ -244,9 +214,9 @@ const submitGroupNameHandler = () => {
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg" >
 
-                    <div class="">
+                     <div class="grid grid-cols-4 gap-2 xl:grid-cols-4 xl:gap-2 sm:grid-cols-2 sm:gap-2 xs:grid-cols-1">
                         <div class="m-6">
-                            <!-- <InputLabel for="search" value="Filter Search"/>
+                            <InputLabel for="search" value="Filter Search"/>
 
                             <TextInput
                                 id="search"
@@ -254,32 +224,14 @@ const submitGroupNameHandler = () => {
                                 type="readonly"
                                 class="border-solid border-2 border-black-600 p-2 mt-1 block"
                                 placeholder="Search here..."
-                            /> -->
-
+                            /> 
+                            
                         </div>
+                        <div class="m-6 mt-10">
+                            <a href="/manifest"><PrimaryButton> Switch to list view </PrimaryButton></a>
+                            </div>
 
-                        <div class="m-6 pt-6" v-if="selectedItems.length">
-                            <PrimaryButton class="mr-5" @click="downloadManifest('csv')"> Download Selected Manifest(CSV) </PrimaryButton>
-                            <PrimaryButton class="mr-5" @click="downloadManifest('pdf')"> Download Selected Manifest(PDF) </PrimaryButton>
-                            <PrimaryButton @click="restoreManifestConfirm = true"> Restore Selected Manifest </PrimaryButton>
-
-                            <Modal :show="restoreManifestConfirm" @close="closeModal">
-                                <div class="p-6">
-
-                                    <div class="mt-6">
-
-                                        <h1>Are you sure you want to restore the selected manifest?</h1>
-                                        
-                                    </div>
-
-                                    <div class="mt-6 flex justify-end">
-                                        <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
-                                        <PrimaryButton @click="submitManifest"> Submit </PrimaryButton>
-
-                                    </div>
-                                </div>
-                            </Modal>
-                        </div>
+                            
                     </div>
                     
                     <EasyDataTable
@@ -293,37 +245,7 @@ const submitGroupNameHandler = () => {
                         </template>
 
                         <template #item-group_name="item">
-                            <div v-if="currentItem && item.index != currentItem.index" class="cursor-pointer">
-                                <p v-if="item.group_name" @click.prevent="clickHandler(item)">{{item.group_name}}</p><p v-else @click.prevent="clickHandler(item)">N/A</p>
-                            </div>
-
-                            <div v-if="!currentItem" class="cursor-pointer">
-                                <p v-if="item.group_name" @click.prevent="clickHandler(item)">{{item.group_name}}</p><p v-else @click.prevent="clickHandler(item)">N/A</p>
-                            </div>
-
-                            <div v-if="currentItem && item.index == currentItem.index" class="grid grid-cols-2 cursor-pointer pt-2 pb-2">
-                                <div>
-                                    <TextInput
-                                        :value="currentItem.group_name"
-                                        @input="event => form.group_name = event.target.value"
-                                        class="border-solid border-2 border-black-600 p-2 mt-1 block"
-                                        placeholder="Enter manifest name"
-                                    />
-                                </div>
-                                <div class="grid grid-cols-10 pt-4">
-                                    <div  @click.prevent="submitGroupNameHandler">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                        </svg>
-                                    </div>
-                                    <div @click.prevent="currentItem = ''">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                
-                            </div>
+                            <p v-if="item.group_name">{{item.group_name}}</p><p v-else>N/A</p>
                         </template>
 
                         <template #item-sum="item">

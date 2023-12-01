@@ -42,7 +42,7 @@ const form = useForm({
     file: ''
 });
 
-const favouriteSportCriteria = ref('all');
+const tableSortCriteria = ref('all');
 
 const showFavouriteSportFilter = ref(false);
   
@@ -50,13 +50,13 @@ const headers: Header[] = [
   { text: "", value: "selected" },
   { text: "ID", value: "id", sortable: true },
   { text: "Item #", value: "item", sortable: true},
-  { text: "Description", value: "description", sortable: true},
+  { text: "Description", value: "description", sortable: true, width: 400},
   { text: "Quantity", value: "quantity", sortable: true},
   { text: "MSRP", value: "msrp", sortable: true},
   { text: "$ Total", value: "totalMsrp", sortable: true},
   { text: "Pallet #", value: "pallet"},
   { text: "Costco Image", value: "images"},
-  { text: "Product URL", value: "costcoUrl"},
+  { text: "Product URL", value: "costcoUrl", width: 400},
   { text: "Actions",  value: "action"}
 ];
 
@@ -140,7 +140,7 @@ const submitManifest = (item) => {
     return new Promise((res, rej) => {
         axios.post('/manifest', form, { responseType: 'blob'}).then((response) => {
             const filename = 'manifest_data_'+formatDate(date)+' '+zone+'.csv';
-            const blob = new Blob([response.data], { type: 'application/vnd.ms-excel' });
+            const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8,' });
             saveAs(blob, filename);
             form.reset();
             selectedItems.value = [];
@@ -181,14 +181,6 @@ const total = () => {
             basket_total += Number(val.totalMsrp);
         });
     }
-    return basket_total.toFixed(2);
-}
-
-const grandTotal = () => {
-    let basket_total = 0;
-    manifestData.value.forEach(val => {
-        basket_total += Number(val.totalMsrp);
-    });
     return basket_total.toFixed(2);
 }
 
@@ -281,7 +273,7 @@ const filterOptions = computed((): FilterOption[] => {
     let results = []
     const filterOptionsArray: FilterOption[] = [];
     if(filterToggle.value == true){
-        console.log('here')
+        selectedItems.value = []
         filterOptionsArray.push({
           field: 'costcoUrl',
           comparison: '!=',
@@ -289,19 +281,19 @@ const filterOptions = computed((): FilterOption[] => {
         });
     }
 
-    if (favouriteSportCriteria.value !== 'all') {
+    if (tableSortCriteria.value !== 'all') {
         filterOptionsArray.push({
           field: 'pallet',
           comparison: '=',
-          criteria: favouriteSportCriteria.value,
+          criteria: tableSortCriteria.value,
         });
     }
-    if(favouriteSportCriteria.value !== 'all'){
+    if(tableSortCriteria.value !== 'all'){
 
     
         manifestData.value.filter(function(data) {
 
-            if(data.pallet.match(favouriteSportCriteria.value)){
+            if(data.pallet.match(tableSortCriteria.value)){
                 //console.log(data)
                 results.push(data)
             }
@@ -312,9 +304,18 @@ const filterOptions = computed((): FilterOption[] => {
         });
         totalVal.value = basket_total.toFixed(2);
     }else{
-        manifestData.value.forEach(val => {
-            basket_total += Number(val.totalMsrp);
-        });
+        if (filterToggle.value) {
+            manifestData.value.forEach(val => {
+                if(val.item_name){
+                    basket_total += Number(val.totalMsrp);
+                }
+            });
+        } else {
+            manifestData.value.forEach(val => {
+                basket_total += Number(val.totalMsrp);
+            });
+        }
+        
         totalVal.value = basket_total.toFixed(2);
     }
 
@@ -337,7 +338,7 @@ const filterToggle = ref(false);
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manifest</h2>
         </template>
 
-        <div class="py-12">
+        <div class="py-3">
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
@@ -353,18 +354,20 @@ const filterToggle = ref(false);
                                 placeholder="Search here..."
                                 @input="filterHandler"
                             />
-                            
                         </div>
                         <div class="m-4">
                             <div class="md:flex md:items-center mb-6 mt-6">
                                 <div class="">
                                   <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                                    Filter Item
+                                    Remove N/A
                                   </label>
                                 </div>
-                                <div class="md:w-2/3">
+                                <div class="mr-7">
                                   <input type="checkbox" v-model="filterToggle">
                                 </div>
+
+
+                                <a href="/manifest-grouped"><PrimaryButton> Switch to grouped view </PrimaryButton></a>
                             </div>
 
                         </div>
@@ -375,8 +378,8 @@ const filterToggle = ref(false);
 
                         <div class="m-6">
                             <InputLabel class="mb-2" for="search" value="Download Manifest"/>
-                            <PrimaryButton v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'CSV'"> Download Manifest(CSV) </PrimaryButton>
-                            <PrimaryButton class="ml-1 sm:ml-0 sm:mt-4" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'PDF'"> Download Manifest(PDF) </PrimaryButton>
+                            <PrimaryButton class="mr-1" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'CSV'"> Download via(CSV) </PrimaryButton>
+                            <PrimaryButton class="ml-1 sm:ml-0 sm:mt-4" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'PDF'"> Download via(PDF) </PrimaryButton>
                                 <button class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-500 dark:hover:bg-gray-500 dark:hover:text-white focus:bg-gray-500 dark:focus:bg-white active:bg-gray-400 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" v-if="selectedItems.length == 0"> Download Selected Manifest </button>
 
                             <Modal :show="sendManifestConfirm" @close="closeModal">
@@ -399,8 +402,7 @@ const filterToggle = ref(false);
                             </Modal>
                         </div>
                     </div>
-                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Selected Total: ${{ total() }}</h3>
-                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Total: ${{ totalVal }}</h3>
+                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Selected Total: ${{ total() }} | Total: ${{ totalVal }}</h3>
                    <EasyDataTable
                         :headers="headers"
                         :items="manifests"
@@ -420,7 +422,7 @@ const filterToggle = ref(false);
                             <div class="filter-menu filter-sport-menu" v-if="showFavouriteSportFilter">
                               <select
                                 class="favouriteSport-selector"
-                                v-model="favouriteSportCriteria"
+                                v-model="tableSortCriteria"
                                 name="pallet"
                                 @change="resetHandler"
                               >
