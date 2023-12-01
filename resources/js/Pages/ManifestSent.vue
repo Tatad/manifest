@@ -43,8 +43,7 @@ const form = useForm({
     images: [],
     features: '',
     selected: [],
-    file: '',
-    group_name: ''
+    file: ''
 });
   
 const headers: Header[] = [
