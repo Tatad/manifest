@@ -64,4 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/manifest-upload-test', [ManifestController::class, 'read'])->name('read');
 });
 
+Route::get('/barcode_qr_reader', 'App\Http\Controllers\ImageUploadController@page');
+Route::post('/barcode_qr_reader/upload', 'App\Http\Controllers\ImageUploadController@upload')->name('image.upload');
+
 require __DIR__.'/auth.php';
