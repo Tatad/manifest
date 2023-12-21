@@ -21,7 +21,8 @@ class ManifestController extends Controller
 {
     public function add(Request $request){
         $input = $request->all();
-        return $input;
+
+        return $input['image'];
         $manifest = Manifest::where('item')->first();
         if(collect($manifest)->isNOtEmpty()){
             $manifest->msrp = $input['msrp'];
@@ -31,7 +32,7 @@ class ManifestController extends Controller
         }else{
             $manifest = new Manifest();
             $manifest->msrp = $input['msrp'];
-            $manifest->total = $input['total'];
+            $manifest->total = $input['msrp'];
             $manifest->pallet = $input['pallet'];
             $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
             $manifest->images = $input['image'];
