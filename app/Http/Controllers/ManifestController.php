@@ -21,6 +21,7 @@ class ManifestController extends Controller
 {
     public function add(Request $request){
         $input = $request->all();
+        return $input;
         $manifest = Manifest::where('item')->first();
         if(collect($manifest)->isNOtEmpty()){
             $manifest->msrp = $input['msrp'];
