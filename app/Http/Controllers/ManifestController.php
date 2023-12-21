@@ -19,6 +19,11 @@ use Carbon\Carbon;
 
 class ManifestController extends Controller
 {
+    public function add(Request $request){
+        $input = $request->all();
+        return 'success';
+        dd($input);
+    }
     /**
      * Read Manifest PDF file
      */
