@@ -21,7 +21,23 @@ class ManifestController extends Controller
 {
     public function add(Request $request){
         $input = $request->all();
-        return $input;
+        $manifest = Manifest::where('item')->first();
+        if(collect($manifest)->isNOtEmpty()){
+            $manifest->msrp = $input['msrp'];
+            $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
+            $manifest->image = $input['image'];
+            $manifest->save();
+        }else{
+            $manifest = new Manifest();
+            $manifest->msrp = $input['msrp'];
+            $manifest->total = $input['total'];
+            $manifest->pallet = $input['pallet'];
+            $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
+            $manifest->image = $input['image'];
+            $manifest->quantity = 1;
+            $manifest->save();
+        }
+        return $manifest;
         dd($input);
     }
     /**
