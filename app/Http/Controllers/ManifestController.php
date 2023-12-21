@@ -25,7 +25,7 @@ class ManifestController extends Controller
         if(collect($manifest)->isNOtEmpty()){
             $manifest->msrp = $input['msrp'];
             $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
-            $manifest->image = $input['image'];
+            $manifest->images = $input['image'];
             $manifest->save();
         }else{
             $manifest = new Manifest();
@@ -33,7 +33,7 @@ class ManifestController extends Controller
             $manifest->total = $input['total'];
             $manifest->pallet = $input['pallet'];
             $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
-            $manifest->image = $input['image'];
+            $manifest->images = $input['image'];
             $manifest->quantity = 1;
             $manifest->save();
         }
