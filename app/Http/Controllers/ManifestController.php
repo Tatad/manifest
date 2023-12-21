@@ -22,7 +22,7 @@ class ManifestController extends Controller
     public function add(Request $request){
         $input = $request->all();
 
-        return $input['image'];
+        //return $input['image'];
         $manifest = Manifest::where('item')->first();
         if(collect($manifest)->isNOtEmpty()){
             $manifest->msrp = $input['msrp'];
