@@ -21,7 +21,7 @@ class ManifestController extends Controller
 {
     public function add(Request $request){
         $input = $request->all();
-        return 'success';
+        return $input;
         dd($input);
     }
     /**
