@@ -129,7 +129,8 @@ class ManifestController extends Controller
                     'msrp' => $itemData->msrp,
                     'features' => $itemData->features,
                     'item_name' => $itemData->item_name,
-                    'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
+                    //'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
+                    'images' => ($itemData->type && $itemData->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$itemData->item."-894"] : $itemData->images,
                     'costcoUrl' => $itemData->item_name,
                     'totalMsrp' => round(($count * $itemData->msrp),2)
                 ]; 
@@ -212,7 +213,7 @@ class ManifestController extends Controller
                     'quantity' => $count, 
                     'id' => $itemData['id'], 
                     'dataId' => $itemData['id'], 
-                    'pallet' => $itemData['pallet'],
+                    'pallet' => $d->pluck('pallet')->unique()->values()->toArray(),
                     'description' => $itemData['description'],
                     'msrp' => $itemData['msrp'],
                     'features' => $itemData['features'],
@@ -305,18 +306,47 @@ class ManifestController extends Controller
             $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1, 'downloaded_at' => Carbon::now(), 'download_group_id' => ($downloadId->download_group_id + 1)]);
         }
 
-        $items = [];
-        $pallets = [];
-        foreach($input['selected'] as $key => $item){
-            $items[] = $item['item'];
-            $pallets[] = $item['pallet'];
+        // $items = [];
+        // $pallets = [];
+        // foreach($input['selected'] as $key => $item){
+        //     $items[] = $item['item'];
+        //     $pallets[] = $item['pallet'];
+        // }
+        // $manifests = Manifest::whereIn('item', $items)->whereIn('pallet', $pallets)->get()->groupBy('pallet');
+
+        // $export = new ManifestExport(
+        //     $items,
+        //     $pallets
+        // );
+
+        $manifests = Manifest::where(['status' => 1, 'download_group_id' => ($downloadId->download_group_id + 1)])->get()->groupBy('download_group_id');
+
+        foreach(collect($manifests)->values()->toArray() as $data){
+            $sum = 0;
+            foreach($data as $val){
+                $sum += $val['total'];
+            }
+            $collectedData = collect($data)->groupBy('item')->map(function($d){
+                $count = collect($d)->groupBy('item')->map->count()->values()->first();
+                $itemData = ($d)->first();
+                return [
+                    'item' => $itemData['item'],
+                    'description' => $itemData['description'],
+                    'msrp' => $itemData['msrp'],
+                    'pallet' => $d->pluck('pallet')->unique()->values()->toArray(),
+                    'quantity' => $count, 
+                    'total' => round(($count * $itemData['msrp']),2)
+                ]; 
+            })->values()->toArray();
+
+            $manifestData = ($collectedData);
         }
-        $manifests = Manifest::whereIn('item', $items)->whereIn('pallet', $pallets)->get()->groupBy('pallet');
 
         $export = new ManifestExport(
-            $items,
-            $pallets
+            collect($manifestData)->values()->toArray()
         );
+
+        return \Excel::download($export, 'manifest.csv');
 
         return \Excel::download($export, 'manifest.csv', \Maatwebsite\Excel\Excel::CSV, [
           'Content-Type' => 'text/csv',
@@ -325,25 +355,31 @@ class ManifestController extends Controller
 
     public function batchDownloadCsv(Request $request){
         $input = $request->all();
-        $manifests = Manifest::where('download_group_id', $input['selected'])->get();
+        $manifests = Manifest::where(['status' => 1, 'download_group_id' => $input['selected']])->get()->groupBy('download_group_id');
 
-        $results = DB::table('manifests')
-                 ->select('item','pallet')
-                 ->where('download_group_id','=',$input['selected'])
-                 ->groupBy('pallet')
-                 ->get();
-        
+        foreach(collect($manifests)->values()->toArray() as $data){
+            $sum = 0;
+            foreach($data as $val){
+                $sum += $val['total'];
+            }
+            $collectedData = collect($data)->groupBy('item')->map(function($d){
+                $count = collect($d)->groupBy('item')->map->count()->values()->first();
+                $itemData = ($d)->first();
+                return [
+                    'item' => $itemData['item'],
+                    'description' => $itemData['description'],
+                    'msrp' => $itemData['msrp'],
+                    'pallet' => $d->pluck('pallet')->unique()->values()->toArray(),
+                    'quantity' => $count, 
+                    'total' => round(($count * $itemData['msrp']),2)
+                ]; 
+            })->values()->toArray();
 
-        $items = [];
-        $pallets = [];
-        foreach($manifests as $key => $item){
-            $items[] = $item['item'];
-            $pallets[] = $item['pallet'];
+            $manifestData = ($collectedData);
         }
 
         $export = new ManifestExport(
-            $items,
-            $pallets
+            collect($manifestData)->values()->toArray()
         );
 
         return \Excel::download($export, 'manifest.csv');

@@ -24,7 +24,9 @@ class Manifest extends Model
         'features',
         'images',
         'status',
-        'item_name'
+        'item_name',
+        'pallets',
+        'type'
     ];
 
 }

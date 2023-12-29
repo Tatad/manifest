@@ -3,29 +3,23 @@
 namespace App\Exports;
 
 use App\Models\Manifest;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Facades\DB;
 
-class ManifestExport implements FromCollection, WithHeadings
+class ManifestExport implements FromArray, WithHeadings
 {
     protected $item;
-    protected $pallet;
 
-    public function __construct(array $item, array $pallet)
+    public function __construct(array $item)
     {
         $this->item = $item;
-        $this->pallet = $pallet;
+        //$this->pallet = $pallet;
     }
 
-    public function collection()
+    public function array(): array
     {
-    	$manifestData = DB::table('manifests')
-            ->select('item', 'description', 'msrp', 'pallet', 'quantity', 'total')
-            ->whereIn('item', $this->item)
-            ->whereIn('pallet', $this->pallet)
-            ->get();
-        return $manifestData;
+        return $this->item;
     }
 
     public function headings(): array
