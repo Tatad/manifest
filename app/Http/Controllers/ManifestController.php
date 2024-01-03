@@ -313,6 +313,14 @@ class ManifestController extends Controller
         return 'success';
     }
 
+    public function updload(Request $request){
+        $input = $request->all();
+
+        \Excel::import(new ManifestImport, $input['file']);
+
+        return Redirect::route('manifest');
+    }
+
     public function add(Request $request){
         $input = $request->all();
 
