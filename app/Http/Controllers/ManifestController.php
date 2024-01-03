@@ -12,272 +12,174 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\PdfToText\Pdf;
 use App\Models\Manifest;
+use App\Models\PalletItem;
+use App\Models\PalletDownload;
 use App\Imports\ManifestImport;
+use App\Imports\PalletImport;
 use App\Exports\ManifestExport;
 use DB;
 use Carbon\Carbon;
 
 class ManifestController extends Controller
 {
-    public function add(Request $request){
-        $input = $request->all();
-
-        //return $input['image'];
-        $manifest = Manifest::where('item')->first();
-        if(collect($manifest)->isNOtEmpty()){
-            $manifest->msrp = $input['msrp'];
-            $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
-            $manifest->images = $input['image'];
-            $manifest->save();
-        }else{
-            $manifest = new Manifest();
-            $manifest->msrp = $input['msrp'];
-            $manifest->total = $input['msrp'];
-            $manifest->pallet = $input['pallet'];
-            $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
-            $manifest->images = $input['image'];
-            $manifest->quantity = 1;
-            $manifest->save();
-        }
-        return $manifest;
-        dd($input);
-    }
-    /**
-     * Read Manifest PDF file
-     */
-    public function read(Request $request)
-    {   
-        ini_set('max_execution_time', 2380);
-        // get cURL resource
-        $ch = curl_init();
-        //$ids = [1660896, 2127647, 1596898,1691718 ,1635441, 2349196, 1891815, 1586356, 619899, 1640734, 2622054, 1627201, 845993, 3272378, 3272379];
-        $ids = Manifest::where('item_name', '=', null)->take(15)->get()->groupBy('item');
-        
-        //dd($ids);
-        //$ids = [1660896];
-        $results = [];
-        foreach($ids as $key => $val){
-            // set url
-            $extract_rules = urlencode('{
-                "title" : {
-                    "selector": "h1",
-                    "output": "text"
-                },
-                "images":{
-                    "selector":"#productImage",
-                    "output":{
-                        "src":"img@src",
-                    }
-                }
-            }');
-
-            curl_setopt($ch, CURLOPT_URL, 'https://app.scrapingbee.com/api/v1/?api_key=ACZW8WWZ3SNFB1DYK7RD31I381GEDUXEGHMRBQZC1X90CVLO5H8X2KAT4PI92I1W8TNDAUKCINXLTHHB&url=https://www.costco.ca/CatalogSearch?keyword='.$key.'&extract_rules=' . $extract_rules);
-
-            // set method
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-
-            // return the transfer as a string
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-
-
-            // send the request and save response to $response
-            $response = curl_exec($ch);
-
-            // stop if fails
-            if (!$response) {
-              die('Error: "' . curl_error($ch) . '" - Code: ' . curl_errno($ch));
+    public function manifestSentList(Request $request){
+        $manifests = PalletItem::with('manifest','pallet_download')->get();
+        $manifestData = collect($manifests)->map(function ($data){
+            if(($data['manifest']) && isset($data['pallet_download'])){
+                return [
+                    'item' => $data->manifest->item,
+                    'quantity' => $data->quantity, 
+                    'id' => $data->id, 
+                    'dataId' => $data->id, 
+                    'pallet' => $data->pallet_number,
+                    'description' => $data->manifest->description,
+                    'msrp' => $data->manifest->msrp,
+                    'features' => $data->manifest->features,
+                    'item_name' => $data->manifest->item_name,
+                    //'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
+                    'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : $data->manifest->images,
+                    'costcoUrl' => $data->manifest->item_name,
+                    'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2)
+                ];
             }
-
-            echo 'HTTP Status Code: ' . curl_getinfo($ch, CURLINFO_HTTP_CODE) . PHP_EOL;
-            echo 'Response Body: ' . $response . PHP_EOL;
-            $res = json_decode($response,true);
-
-            if($res['title'] != ""){
-                Manifest::where('item', $key)->update(['item_name' => $res['title'], 'images' => $res['images']['src']]);
-            }else{
-                Manifest::where('item', $key)->update(['item_name' => 'not_available', 'images' => 'not_available']);
-            }
-            $results[] = $res;
-            // close curl resource to free up system resources
+        });
+        //get available pallets
+        $pallets = collect($manifests)->groupBy('pallet_number')->keys();
+        $palletArray = [];
+        foreach($pallets as $pallet){
+            $palletArray[] = ['pallet' => $pallet];
         }
-        curl_close($ch);
-        dd($results);
-    }
 
-    public function updload(Request $request){
-        $input = $request->all();
-
-        \Excel::import(new ManifestImport, $input['file']);
-
-        return Redirect::route('manifest');
+        return Inertia::render('ManifestSentList', [
+            'manifests' => collect($manifestData)->filter()->values()->toArray(),
+            'pallets'   => $palletArray
+        ]);
     }
 
     public function manifest(Request $request){
-        $manifests = Manifest::where(['status' => 0])->get()->groupBy('pallet');
+        $manifests = PalletItem::with('manifest','pallet_download')->get();
         $manifestData = collect($manifests)->map(function ($data){
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
+            if(($data['manifest']) && !isset($data['pallet_download'])){
                 return [
-                    'item' => $itemData->item,
-                    'quantity' => $count, 
-                    'id' => $itemData->id, 
-                    'dataId' => $itemData->id, 
-                    'pallet' => $itemData->pallet,
-                    'description' => $itemData->description,
-                    'msrp' => $itemData->msrp,
-                    'features' => $itemData->features,
-                    'item_name' => $itemData->item_name,
+                    'item' => $data->manifest->item,
+                    'quantity' => $data->quantity, 
+                    'id' => $data->id, 
+                    'dataId' => $data->id, 
+                    'pallet' => $data->pallet_number,
+                    'description' => $data->manifest->description,
+                    'msrp' => $data->manifest->msrp,
+                    'features' => $data->manifest->features,
+                    'item_name' => $data->manifest->item_name,
                     //'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
-                    'images' => ($itemData->type && $itemData->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$itemData->item."-894"] : $itemData->images,
-                    'costcoUrl' => $itemData->item_name,
-                    'totalMsrp' => round(($count * $itemData->msrp),2)
-                ]; 
-            });
-            return collect($collectedData)->values();
-        })->values()->toArray();
-        $newArray = call_user_func_array('array_merge', $manifestData);
-
+                    'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : $data->manifest->images,
+                    'costcoUrl' => $data->manifest->item_name,
+                    'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2)
+                ];
+            }
+        });
         //get available pallets
-        $pallets = DB::table('manifests')
-                 ->select('pallet')
-                 ->where('status','=',0)
-                 ->groupBy('pallet')
-                 ->get();
+        $pallets = collect($manifests)->groupBy('pallet_number')->keys();
+        $palletArray = [];
+        foreach($pallets as $pallet){
+            $palletArray[] = ['pallet' => $pallet];
+        }
 
         return Inertia::render('Manifest', [
-            'manifests' => collect($newArray)->values()->toArray(),
-            'pallets'   => collect($pallets)->filter()->values()->toArray()
+            'manifests' => collect($manifestData)->filter()->values()->toArray(),
+            'pallets'   => $palletArray
         ]);
     }
 
     public function manifestGroupedView(){
-        $manifests = Manifest::where(['status' => 0])->get()->groupBy('pallet');
-
-        $manifestData = [];
-        foreach(collect($manifests)->values()->toArray() as $data){
+        $manifests = PalletItem::with('manifest','pallet_download')->get()->groupBy('pallet_number');
+        
+        $manifestDataResult = [];
+        foreach($manifests as $key => $val){
             $sum = 0;
-            foreach($data as $val){
-                $sum += $val['total'];
+            $manifest = [];
+            foreach($val as $d){
+                if(($d['manifest']) && !isset($d['pallet_download'])){
+                    $sum += $d['manifest']['total'];
+                    $d['manifest']['pallet'] = $key;
+                    $manifest[] = $d['manifest'];
+                }
             }
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData['item'],
-                    'quantity' => $count, 
-                    'id' => $itemData['id'], 
-                    'dataId' => $itemData['id'], 
-                    'pallet' => $itemData['pallet'],
-                    'description' => $itemData['description'],
-                    'msrp' => $itemData['msrp'],
-                    'features' => $itemData['features'],
-                    'item_name' => $itemData['item_name'],
-                    'images' => ($itemData['images'] != 'not_available') ? json_decode($itemData['images'],true) : $itemData['images'],
-                    'costcoUrl' => $itemData['item_name'],
-                    'total' => round(($count * $itemData['msrp']),2)
-                ]; 
-            })->values()->toArray();
 
-            $manifestData[] = [
-                'group_id' => $data[0]['download_group_id'],
-                'downloaded_at' => $data[0]['downloaded_at'],
-                'pallet' => $data[0]['pallet'],
-                'group_name' => $data[0]['group_name'],
-                'sum' => $sum,
-                'data' => ($collectedData)
-            ];
+            if($sum != 0){
+                $manifestDataResult[] = [
+                    'group_id' => null,
+                    'downloaded_at' => null,
+                    'pallet' => $key,
+                    'group_name' => null,
+                    'sum' => $sum,
+                    'data' => collect($manifest)->values()->toArray()
+                ];
+            }
         }
 
         return Inertia::render('ManifestGroupedView', [
-            //'manifests' => collect($newArray)->values()->toArray(),
-            'manifests'  => collect($manifestData)->values()->toArray()
+            'manifests'  => $manifestDataResult
         ]);
     }
 
     public function manifestSent(Request $request){
-        $manifests = Manifest::where(['status' => 1])->get()->groupBy('download_group_id');
+        $manifests = PalletDownload::with('manifest','pallet_item')->get()->groupBy('group_id');
 
-        $manifestData = [];
-        foreach(collect($manifests)->values()->toArray() as $data){
+        $manifestDataResult = [];
+        foreach($manifests as $key => $val){
             $sum = 0;
-            foreach($data as $val){
-                $sum += $val['total'];
+            $manifest = [];
+            foreach($val as $d){
+                $sum += $d['manifest']['total'];
+                $manifest[] = $d['manifest'];
             }
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData['item'],
-                    'quantity' => $count, 
-                    'id' => $itemData['id'], 
-                    'dataId' => $itemData['id'], 
-                    'pallet' => $d->pluck('pallet')->unique()->values()->toArray(),
-                    'description' => $itemData['description'],
-                    'msrp' => $itemData['msrp'],
-                    'features' => $itemData['features'],
-                    'item_name' => $itemData['item_name'],
-                    'images' => ($itemData['images'] != 'not_available') ? json_decode($itemData['images'],true) : $itemData['images'],
-                    'costcoUrl' => $itemData['item_name'],
-                    'total' => round(($count * $itemData['msrp']),2)
-                ]; 
-            })->values()->toArray();
 
-            $manifestData[] = [
-                'group_id' => $data[0]['download_group_id'],
-                'downloaded_at' => $data[0]['downloaded_at'],
-                'group_name' => $data[0]['group_name'],
-                'sum' => $sum,
-                'data' => ($collectedData)
-            ];
+            if($sum != 0){
+                $manifestDataResult[] = [
+                    'group_id' => $val[0]['group_id'],
+                    'downloaded_at' => Carbon::parse($val[0]['created_at'])->format('Y-m-d h:i:s'),
+                    'pallet' => $key,
+                    'group_name' => $val[0]['group_name'],
+                    'sum' => $sum,
+                    'data' => collect($val)->values()->toArray()
+                ];
+            }
         }
-
         return Inertia::render('ManifestSent', [
-            //'manifests' => collect($newArray)->values()->toArray(),
-            'manifests'  => collect($manifestData)->values()->toArray()
+            'manifests'  => collect($manifestDataResult)->values()->toArray()
         ]);
     }
 
     public function pdfManifest(Request $request){
         $input = $request->all()['form'];
-        $downloadId = DB::table('manifests')->latest('download_group_id')->first();
-
-        $items = [];
-        $pallets = [];
-        foreach($input['selected'] as $key => $item){
-            $items[] = $item['item'];
-            $pallets[] = $item['pallet'];
+        $downloadId = DB::table('pallet_downloads')->latest('group_id')->first();
+        foreach($input['selected'] as $key => $selected){
+            $pallet_item = PalletItem::where(['item_number' => $selected['item'], 'pallet_number' => $selected['pallet']])->first();
+            $palletDownload = new PalletDownload();
+            $palletDownload->group_id = $downloadId ? ($downloadId->group_id + 1) : 1;
+            $palletDownload->pallet_item_id = $pallet_item->id;
+            $palletDownload->pallet_number = $selected['pallet'];
+            $palletDownload->item_number = $selected['item'];
+            $palletDownload->save();
         }
-        $manifests = Manifest::whereIn('item', $items)->whereIn('pallet', $pallets)->get()->groupBy('pallet');
+        $manifests = PalletDownload::with('manifest','pallet_item')->where('group_id', $palletDownload->group_id)->get();
         $manifestData = collect($manifests)->map(function ($data){
-            //dd(collect($data)->groupBy('item'));
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData->item,
-                    'quantity' => $count, 
-                    'id' => $itemData->id, 
-                    'pallet' => $itemData->pallet,
-                    'description' => $itemData->description,
-                    'msrp' => $itemData->msrp,
-                    'features' => $itemData->features,
-                    'item_name' => $itemData->item_name,
-                    'images' => $itemData->images,
-                    'costcoUrl' => $itemData->item_name,
-                    'totalMsrp' => round(($count * $itemData->msrp),2)
-                ]; 
-            });
-            return collect($collectedData)->values();
+            return [
+                'item' => $data['manifest']['item'],
+                'quantity' => $data['pallet_item']['quantity'], 
+                'id' => $data['manifest']['id'], 
+                'pallet' => $data['manifest']['pallet'],
+                'description' => $data['manifest']['description'],
+                'msrp' => $data['manifest']['msrp'],
+                'features' => $data['manifest']['features'],
+                'item_name' => $data['manifest']['item_name'],
+                'images' => $data['manifest']['images'],
+                'costcoUrl' => $data['manifest']['item_name'],
+                'totalMsrp' => round(($data['pallet_item']['quantity'] * $data['manifest']['msrp']),2)
+            ]; 
         })->values()->toArray();
-        $newArray = call_user_func_array('array_merge', $manifestData);
-        $pdf = \Pdf::loadView('pdf.download', ['data' => collect($newArray)->values()->toArray()]);
 
-        //update manifest
-        foreach($input['selected'] as $selected){
-            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1, 'downloaded_at' => Carbon::now() ,'download_group_id' => ($downloadId->download_group_id + 1)]);
-        }
+        $pdf = \Pdf::loadView('pdf.download', ['data' => collect($manifestData)->values()->toArray()]);
 
         return $pdf->stream('download.pdf');
     }
@@ -300,46 +202,26 @@ class ManifestController extends Controller
 
     public function send(Request $request){
         $input = $request->all();
-       
-        $downloadId = DB::table('manifests')->latest('download_group_id')->first();
-        foreach($input['selected'] as $selected){
-            $manifest = Manifest::where(['item' => $selected['item'], 'pallet' => $selected['pallet']])->update(['status' => 1, 'downloaded_at' => Carbon::now(), 'download_group_id' => ($downloadId->download_group_id + 1)]);
+        $downloadId = DB::table('pallet_downloads')->latest('group_id')->first();
+        foreach($input['selected'] as $key => $selected){
+            $pallet_item = PalletItem::where(['item_number' => $selected['item'], 'pallet_number' => $selected['pallet']])->first();
+            $palletDownload = new PalletDownload();
+            $palletDownload->group_id = $downloadId ? ($downloadId->group_id + 1) : 1;
+            $palletDownload->pallet_item_id = $pallet_item->id;
+            $palletDownload->pallet_number = $selected['pallet'];
+            $palletDownload->item_number = $selected['item'];
+            $palletDownload->save();
         }
-
-        // $items = [];
-        // $pallets = [];
-        // foreach($input['selected'] as $key => $item){
-        //     $items[] = $item['item'];
-        //     $pallets[] = $item['pallet'];
-        // }
-        // $manifests = Manifest::whereIn('item', $items)->whereIn('pallet', $pallets)->get()->groupBy('pallet');
-
-        // $export = new ManifestExport(
-        //     $items,
-        //     $pallets
-        // );
-
-        $manifests = Manifest::where(['status' => 1, 'download_group_id' => ($downloadId->download_group_id + 1)])->get()->groupBy('download_group_id');
-
+        $manifests = PalletDownload::with('manifest','pallet_item')->where('group_id', $palletDownload->group_id)->get();
         foreach(collect($manifests)->values()->toArray() as $data){
-            $sum = 0;
-            foreach($data as $val){
-                $sum += $val['total'];
-            }
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData['item'],
-                    'description' => $itemData['description'],
-                    'msrp' => $itemData['msrp'],
-                    'pallet' => $d->pluck('pallet')->unique()->values()->toArray(),
-                    'quantity' => $count, 
-                    'total' => round(($count * $itemData['msrp']),2)
-                ]; 
-            })->values()->toArray();
-
-            $manifestData = ($collectedData);
+            $manifestData[] = [
+                'item' => $data['manifest']['item'],
+                'description' => $data['manifest']['description'],
+                'msrp' => $data['manifest']['msrp'],
+                'pallet' => $data['pallet_number'],
+                'quantity' => $data['pallet_item']['quantity'], 
+                'total' => round(($data['pallet_item']['quantity'] * $data['manifest']['msrp']),2)
+            ]; 
         }
 
         $export = new ManifestExport(
@@ -347,35 +229,20 @@ class ManifestController extends Controller
         );
 
         return \Excel::download($export, 'manifest.csv');
-
-        return \Excel::download($export, 'manifest.csv', \Maatwebsite\Excel\Excel::CSV, [
-          'Content-Type' => 'text/csv',
-        ]);
     }
 
     public function batchDownloadCsv(Request $request){
         $input = $request->all();
-        $manifests = Manifest::where(['status' => 1, 'download_group_id' => $input['selected']])->get()->groupBy('download_group_id');
-
+        $manifests = PalletDownload::with('manifest','pallet_item')->where('group_id', $input['selected'])->get();
         foreach(collect($manifests)->values()->toArray() as $data){
-            $sum = 0;
-            foreach($data as $val){
-                $sum += $val['total'];
-            }
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData['item'],
-                    'description' => $itemData['description'],
-                    'msrp' => $itemData['msrp'],
-                    'pallet' => $d->pluck('pallet')->unique()->values()->toArray(),
-                    'quantity' => $count, 
-                    'total' => round(($count * $itemData['msrp']),2)
-                ]; 
-            })->values()->toArray();
-
-            $manifestData = ($collectedData);
+            $manifestData[] = [
+                'item' => $data['manifest']['item'],
+                'description' => $data['manifest']['description'],
+                'msrp' => $data['manifest']['msrp'],
+                'pallet' => $data['pallet_number'],
+                'quantity' => $data['pallet_item']['quantity'], 
+                'total' => round(($data['pallet_item']['quantity'] * $data['manifest']['msrp']),2)
+            ]; 
         }
 
         $export = new ManifestExport(
@@ -387,43 +254,31 @@ class ManifestController extends Controller
 
     public function batchDownloadPdf(Request $request){
         $input = $request->all();
-        $downloadId = DB::table('manifests')->latest('download_group_id')->first();
 
-        $items = [];
-        $pallets = [];
+        $manifests = PalletDownload::with('manifest','pallet_item')->where('group_id', $input['selected'])->get();
 
-        $manifests = Manifest::where('download_group_id', $input['selected'])->get()->groupBy('pallet');
         $manifestData = collect($manifests)->map(function ($data){
-            //dd(collect($data)->groupBy('item'));
-            $collectedData = collect($data)->groupBy('item')->map(function($d){
-                $count = collect($d)->groupBy('item')->map->count()->values()->first();
-                $itemData = ($d)->first();
-                return [
-                    'item' => $itemData->item,
-                    'quantity' => $count, 
-                    'id' => $itemData->id, 
-                    'pallet' => $itemData->pallet,
-                    'description' => $itemData->description,
-                    'msrp' => $itemData->msrp,
-                    'features' => $itemData->features,
-                    'item_name' => $itemData->item_name,
-                    'images' => $itemData->images,
-                    'costcoUrl' => $itemData->item_name,
-                    'totalMsrp' => round(($count * $itemData->msrp),2)
-                ]; 
-            });
-            return collect($collectedData)->values();
+            return [
+                'item' => $data['manifest']['item'],
+                'quantity' => $data['pallet_item']['quantity'], 
+                'id' => $data['manifest']['id'], 
+                'pallet' => $data['manifest']['pallet'],
+                'description' => $data['manifest']['description'],
+                'msrp' => $data['manifest']['msrp'],
+                'features' => $data['manifest']['features'],
+                'item_name' => $data['manifest']['item_name'],
+                'images' => $data['manifest']['images'],
+                'costcoUrl' => $data['manifest']['item_name'],
+                'totalMsrp' => round(($data['pallet_item']['quantity'] * $data['manifest']['msrp']),2)
+            ]; 
         })->values()->toArray();
-        $newArray = call_user_func_array('array_merge', $manifestData);
-        $pdf = \Pdf::loadView('pdf.download', ['data' => collect($newArray)->values()->toArray()]);
-
+        $pdf = \Pdf::loadView('pdf.download', ['data' => collect($manifestData)->values()->toArray()]);
         return $pdf->stream('download.pdf');
     }
 
     public function restore(Request $request){
         $input = $request->all();
-        //dd($input);
-        $manifest = Manifest::where('download_group_id', $input['selected'])->update(['status' => 0]);
+        $manifest = PalletDownload::where('group_id', $input['selected'])->delete();
         return 'success';
     }
 
@@ -452,11 +307,38 @@ class ManifestController extends Controller
 
     public function addManifestName(Request $request){
         $input = $request->all();
-        //dd($input);
         if($input['download_group_id']){
-            Manifest::where('download_group_id', $input['download_group_id'])->update(['group_name' => $input['group_name']]);
+            PalletDownload::where('group_id', $input['download_group_id'])->update(['group_name' => $input['group_name']]);
         }
         return 'success';
+    }
+
+    public function add(Request $request){
+        $input = $request->all();
+
+        //return $input['image'];
+        $manifest = Manifest::where('item')->first();
+        if(collect($manifest)->isNOtEmpty()){
+            $manifest->upc_code = $input['upc_code'];
+            $manifest->msrp = $input['msrp'];
+            $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
+            $manifest->images = $input['image'];
+            $manifest->save();
+        }else{
+            $manifest = new Manifest();
+            $manifest->item = $input['item'];
+            $manifest->upc_code = $input['upc_code'];
+            $manifest->pallet = $input['pallet'];
+            $manifest->msrp = $input['msrp'];
+            $manifest->total = $input['msrp'];
+            $manifest->pallet = $input['pallet'];
+            $manifest->description = ($input['description'] && $input['description'] != "") ? $input['description'] : $maniest->description;
+            $manifest->images = $input['image'];
+            $manifest->quantity = 1;
+            $manifest->save();
+        }
+        return $manifest;
+        dd($input);
     }
 }
 

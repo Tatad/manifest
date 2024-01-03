@@ -56,8 +56,7 @@ const headers: Header[] = [
   { text: "$ Total", value: "totalMsrp", sortable: true},
   { text: "Pallet #", value: "pallet"},
   { text: "Costco Image", value: "images"},
-  { text: "Product URL", value: "costcoUrl", width: 400},
-  { text: "Actions",  value: "action"}
+  { text: "Product URL", value: "costcoUrl", width: 400}
 ];
 
 const openManifestItem = ref(false);
@@ -184,45 +183,6 @@ const total = () => {
     return basket_total.toFixed(2);
 }
 
-const downloadManifestPdf = (item) => {
-    let selectedItemNumber = [];
-    if(selectedItems.value){
-        selectedItems.value.forEach(val => {
-            selectedItemNumber.push({"item": val.item, "pallet" : val.pallet});
-           //or if you pass float numbers , use parseFloat()
-        });
-    }
-
-    form.selected = selectedItemNumber;
-
-    var date = new Date();
-
-    return new Promise((res, rej) => {
-        axios({
-            url: '/manifest-download-pdf', 
-            method: 'POST',
-            params: {form: form},
-            responseType: 'blob', // important
-        }).then((response) => {
-            const filename = 'manifest_data_'+formatDate(date)+' '+zone+'.pdf';
-            const blob = new Blob([response.data], { type: 'application/pdf' });
-            saveAs(blob, filename);
-            form.reset();
-            selectedItems.value = [];
-            openManifestItem.value = false;
-            sendManifestConfirm.value = false;
-            res(response.data);
-            //refresh the component
-            form.get(route('manifest'), {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    
-                }
-            });
-        });
-    });
-}
 
 let totalVal = ref(manifestData.value.reduce((total, obj) => obj.totalMsrp + total,0).toFixed(2));
 const clientItemsLength = computed(() => dataTable.value?.clientItems);
@@ -328,6 +288,54 @@ const resetHandler = () => {
 
 const filterToggle = ref(false);
 
+const downloadManifest = (type) => {
+    
+
+    // let selectedItemNumber = [];
+
+    //form.selected = selectedItems.value[0].group_id;
+    console.log(selectedItems.value[0].group_id)
+    return
+    var date = new Date();
+
+    let url = ''
+    let ext = ''
+    let blobType = ''
+    if(type == 'csv'){
+        url = '/manifest-download-batch-csv';
+        ext = '.csv';
+        blobType = 'application/vnd.ms-excel';
+    }else{
+        url = '/manifest-download-batch-pdf'
+        ext = '.pdf';
+        blobType = 'application/pdf';
+    }
+    return new Promise((res, rej) => {
+        axios({
+            url: url, 
+            method: 'POST',
+            params:  form,
+            responseType: 'blob', // important
+        }).then((response) => {
+            const filename = 'manifest_data_'+formatDate(date)+' '+zone+ext;
+            const blob = new Blob([response.data], { type: blobType });
+            saveAs(blob, filename);
+            form.reset();
+            selectedItems.value = [];
+            openManifestItem.value = false;
+            res(response.data);
+            //refresh the component
+            form.get(route('manifest.sent'), {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    
+                }
+            });
+        });
+    });
+}
+
 </script>
 
 <template>
@@ -357,30 +365,18 @@ const filterToggle = ref(false);
                         </div>
                         <div class="m-4">
                             <div class="md:flex md:items-center mb-6 mt-6">
-                                <div class="">
-                                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                                    Hide N/A
-                                  </label>
-                                </div>
-                                <div class="mr-7">
-                                  <input type="checkbox" v-model="filterToggle">
-                                </div>
 
 
-                                <a href="/manifest-grouped"><PrimaryButton> Switch to pallet view </PrimaryButton></a>
+                                <a href="/manifest-sent"><PrimaryButton> Switch to pallet view </PrimaryButton></a>
                             </div>
 
                         </div>
-                        <div class="m-4">
-                            <InputLabel class="mb-2" for="search" value="Upload Manifest"/>
-                            <input type="file" @change="onChange" >
-                        </div>
 
                         <div class="m-6">
-                            <InputLabel class="mb-2" for="search" value="Download Manifest"/>
-                            <PrimaryButton class="mr-1" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'CSV'"> Download via(CSV) </PrimaryButton>
-                            <PrimaryButton class="ml-1 sm:ml-0 sm:mt-4" v-if="selectedItems.length" @click="sendManifestConfirm = true;type = 'PDF'"> Download via(PDF) </PrimaryButton>
-                                <button class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-500 dark:hover:bg-gray-500 dark:hover:text-white focus:bg-gray-500 dark:focus:bg-white active:bg-gray-400 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" v-if="selectedItems.length == 0"> Download Selected Manifest </button>
+                            <!-- <InputLabel class="mb-2" for="search" value="Download Manifest"/>
+                            <PrimaryButton class="mr-1" v-if="selectedItems.length" @click="downloadManifest('csv')"> Download via(CSV) </PrimaryButton>
+                            <PrimaryButton class="ml-1 sm:ml-0 sm:mt-4" v-if="selectedItems.length" @click="downloadManifest('pdf')"> Download via(PDF) </PrimaryButton> 
+                                <button class="inline-flex items-center px-4 py-2 bg-gray-400 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-500 dark:hover:bg-gray-500 dark:hover:text-white focus:bg-gray-500 dark:focus:bg-white active:bg-gray-400 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" v-if="selectedItems.length == 0"> Download Selected Manifest </button> -->
 
                             <Modal :show="sendManifestConfirm" @close="closeModal">
                                 <div class="p-6">
@@ -402,12 +398,11 @@ const filterToggle = ref(false);
                             </Modal>
                         </div>
                     </div>
-                    <h3 class="text-lg font-bold mr-7 pb-5 text-right">Selected Total: ${{ total() }} | Total: ${{ totalVal }}</h3>
+                    <h3 class="text-lg font-bold mr-7 pb-5 text-right"> Total: ${{ totalVal }}</h3>
                    <EasyDataTable
                         :headers="headers"
                         :items="manifests"
                         :search-value="searchValue"
-                        v-model:items-selected="selectedItems"
                         :filter-options="filterOptions"
                         ref="dataTable"
                         :rows-items="[25,50,100,manifestData.length]"
@@ -465,12 +460,6 @@ const filterToggle = ref(false);
                                         Loading...
                                 </span>
                                 <span v-else>N/A</span>
-                            </div>
-                        </template>
-                      
-                        <template #item-action="item">
-                          <div class="customize-header">
-                            <PrimaryButton @click="updateManifestItem(item)"> Edit </PrimaryButton>
                             </div>
                         </template>
 

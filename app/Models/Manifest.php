@@ -26,7 +26,8 @@ class Manifest extends Model
         'status',
         'item_name',
         'pallets',
-        'type'
+        'type',
+        'upc_code'
     ];
 
 }

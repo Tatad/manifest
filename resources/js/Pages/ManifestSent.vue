@@ -242,7 +242,14 @@ const submitGroupNameHandler = () => {
         <div class="py-3">
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg" >
+                    <div class="m-4">
+                        <div class="md:flex md:items-center mb-6 mt-6">
 
+
+                            <a href="/manifest-sent-list"><PrimaryButton> Switch to list view </PrimaryButton></a>
+                        </div>
+
+                    </div>
                     <div class="">
                         <div class="m-6">
                             <!-- <InputLabel for="search" value="Filter Search"/>
@@ -354,12 +361,12 @@ const submitGroupNameHandler = () => {
 
                                 <tbody>
                                     <tr v-for="data in item.data" class="text-gray dark:text-white bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td class="px-6 py-3">{{data.item}}</td>
-                                        <td class="px-6 py-3">{{data.description}}</td>
-                                        <td class="px-6 py-3">{{data.quantity}}</td>
-                                        <td class="px-6 py-3">{{data.msrp}}</td>
-                                        <td class="px-6 py-3">{{data.msrp * data.quantity}}</td>
-                                        <td class="px-6 py-3">{{data.pallet}}</td>
+                                        <td class="px-6 py-3">{{data.manifest.item}}</td>
+                                        <td class="px-6 py-3">{{data.manifest.description}}</td>
+                                        <td class="px-6 py-3">{{data.manifest.quantity}}</td>
+                                        <td class="px-6 py-3">{{data.manifest.msrp}}</td>
+                                        <td class="px-6 py-3">{{data.manifest.msrp * data.manifest.quantity}}</td>
+                                        <td class="px-6 py-3">{{data.pallet_number}}</td>
                                     </tr>
                                 </tbody>
                             </table>

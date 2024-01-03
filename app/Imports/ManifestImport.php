@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Manifest;
+use App\Models\PalletItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -19,7 +20,8 @@ class ManifestImport implements ToModel, WithHeadingRow
     {
         $manifest = Manifest::where(['item' => $row['item']])->first();
         if(collect($manifest)->isEmpty()){
-            return new Manifest([
+
+            $manifest = new Manifest([
                 "item" => $row['item'],
                 "description" => $row['description'],
                 "quantity" => ($row['qty'] == "I") ? 1 :$row['qty'],
@@ -29,21 +31,25 @@ class ManifestImport implements ToModel, WithHeadingRow
                 "type" =>  $row['type'],
                 "pallets" => json_encode([$row['pallet'] => $row['qty']])
             ]);
-        }else{
-            $existingPallet = json_decode($manifest->pallets, true);
-            foreach ($existingPallet as $key => $value) {
-                if($manifest['item'] == $row['item'] && $key == $row['pallet']){
-                    $total = ($value + $row['qty']);
-                    Manifest::where(['item' => $row['item']])->update(['pallets' => json_encode([$key => $total])]);
-                }
 
-                if($manifest['item'] == $row['item'] && $key != $row['pallet']){
-                    array_push($existingPallet, $row['qty']);
-                    
-                    Manifest::where(['item' => $row['item']])->update(['pallets' => json_encode($existingPallet)]);
-                }
+            $manifest->save();
+
+            if($manifest){
+                $pallet = new PalletItem();
+                $pallet->item_number = $row['item'];
+                $pallet->pallet_number = $row['pallet'];
+                $pallet->quantity = $row['qty'];
+                $pallet->save();
+                return $pallet;
             }
             
+        }else{
+            $pallet = new PalletItem();
+            $pallet->item_number = $row['item'];
+            $pallet->pallet_number = $row['pallet'];
+            $pallet->quantity = $row['qty'];
+            $pallet->save();
+            return $pallet;
         }
     }
 }
