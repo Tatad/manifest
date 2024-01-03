@@ -43,6 +43,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [ManifestController::class, 'manifest'])->name('home');
     Route::get('/manifest', [ManifestController::class, 'manifest'])->name('manifest');
     Route::get('/manifest-grouped', [ManifestController::class, 'manifestGroupedView'])->name('manifestGroupedView');
+
+    Route::get('/manifest-sent-list', [ManifestController::class, 'manifestSentList'])->name('manifestSentList');
+
     Route::get('/manifest-sent', [ManifestController::class, 'manifestSent'])->name('manifest.sent');
     Route::post('/manifest-download-batch-pdf', [ManifestController::class, 'batchDownloadPdf'])->name('manifest.batchPdf');
     Route::post('/manifest-download-batch-csv', [ManifestController::class, 'batchDownloadCsv'])->name('manifest.batchCsv');
