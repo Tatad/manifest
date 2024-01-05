@@ -47,10 +47,23 @@ const form = useForm({
 });
   
 const headers: Header[] = [
-  { text: "Select", value: "selected" },
+  // { text: "Select", value: "selected" },
   { text: "Downloaded at", value: "downloaded_at", sortable: true },
   { text: "Manifest name", value: "group_name", sortable: true, width: 500 },
   { text: "$ Total", value: "sum", sortable: true },
+];
+
+
+const manifestHeaders: Header[] = [
+  { text: "", value: "selected" },
+  { text: "Item #", value: "item", sortable: true},
+  { text: "Description", value: "description", sortable: true, width: 400},
+  { text: "Quantity", value: "quantity", sortable: true},
+  { text: "MSRP", value: "msrp", sortable: true},
+  { text: "$ Total", value: "totalMsrp", sortable: true},
+  { text: "Pallet #", value: "pallet"},
+  { text: "Costco Image", value: "images"},
+  { text: "Product URL", value: "costcoUrl", width: 400}
 ];
 
 const openManifestItem = ref(false);
@@ -68,8 +81,9 @@ const addRow = () => {
 }
 
 const submitManifest = (item) => {
+    //console.log('here');return;
     let selectedItemNumber = [];
-
+    //console.log(selectedItems.value)
     form.selected = selectedItems.value[0].group_id;
 
     var date = new Date();
@@ -88,7 +102,8 @@ const submitManifest = (item) => {
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    
+                    selectedItems.value = []
+                    manifestModal.value = false
                 }
             });
         }).catch((err) => {
@@ -130,6 +145,7 @@ const total = () => {
 var zone = new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
 const downloadManifest = (type) => {
     console.log(type)
+    //return
     // let selectedItemNumber = [];
 
     form.selected = selectedItems.value[0].group_id;
@@ -229,6 +245,40 @@ const submitGroupNameHandler = () => {
     })
 }
 
+const manifestDataResult = ref('')
+const manifestModal = ref(false)
+const showRow = (item: ClickRowArgument) => {
+    console.log(JSON.stringify(item.data))
+    selectedItems.value = item.data
+    manifestDataResult.value = item.data
+    manifestModal.value = true
+};
+
+const filterHandler = (e) =>{
+    let basket_total = 0;
+    totalVal.value = 0;
+    selectedItems.value = []
+    let results = []
+
+    if(searchValue.value != ""){
+        let filterData = manifestData.value.filter(function(data) {
+            let transformedId = data.id.toString();
+            let transformedMsrp = data.msrp.toString();
+        });
+        const uniq = [...new Set(results)];
+
+        uniq.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
+        totalVal.value = basket_total.toFixed(2);
+    }else{
+        manifestData.value.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
+        totalVal.value = basket_total.toFixed(2);
+    }
+}
+
 </script>
 
 <template>
@@ -265,9 +315,9 @@ const submitGroupNameHandler = () => {
                         </div>
 
                         <div class="m-6 pt-6" v-if="selectedItems.length">
-                            <PrimaryButton class="mr-5" @click="downloadManifest('csv')"> Download Selected Manifest(CSV) </PrimaryButton>
+                            <!-- <PrimaryButton class="mr-5" @click="downloadManifest('csv')"> Download Selected Manifest(CSV) </PrimaryButton>
                             <PrimaryButton class="mr-5" @click="downloadManifest('pdf')"> Download Selected Manifest(PDF) </PrimaryButton>
-                            <PrimaryButton @click="restoreManifestConfirm = true"> Restore Selected Manifest </PrimaryButton>
+                            <PrimaryButton @click="restoreManifestConfirm = true"> Restore Selected Manifest </PrimaryButton> -->
 
                             <Modal :show="restoreManifestConfirm" @close="closeModal">
                                 <div class="p-6">
@@ -292,6 +342,7 @@ const submitGroupNameHandler = () => {
                         :headers="headers"
                         :items="manifests"
                         :search-value="searchValue"
+                        @click-row="showRow"
                         show-index
                       >
                         <template #item-downloaded_at="item">
@@ -348,7 +399,7 @@ const submitGroupNameHandler = () => {
                             </div>
                         </template>
 
-                        <template #expand="item">
+                        <!-- <template #expand="item">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                     <th scope="col" class="px-6 py-3">Item #</th>
@@ -370,7 +421,7 @@ const submitGroupNameHandler = () => {
                                     </tr>
                                 </tbody>
                             </table>
-                        </template>
+                        </template> -->
 
                       </EasyDataTable>
                     
@@ -399,6 +450,86 @@ const submitGroupNameHandler = () => {
 
                     
                 </div>
+            </div>
+        </Modal>
+
+        <Modal :show="manifestModal" @close="closeModal" :maxWidth="40">
+            <div class="p-6">
+                <PrimaryButton class="mr-1" v-if="selectedItems.length" @click="downloadManifest('csv')"> Download via(CSV) </PrimaryButton>
+                <PrimaryButton class="ml-1 sm:ml-0 sm:mt-4" v-if="selectedItems.length" @click="downloadManifest('pdf')"> Download via(PDF) </PrimaryButton>
+                <PrimaryButton class="ml-1" v-if="selectedItems.length" @click="submitManifest"> Restore Selected Manifest </PrimaryButton>
+                <PrimaryButton class="float-right" @click="manifestModal = false;selectedItems = []">Close</PrimaryButton>
+                <div class="sm:w-full m-6">
+                    <InputLabel for="search" value="Filter Search"/>
+
+                    <TextInput
+                        id="search"
+                        v-model="searchValue"
+                        type="search"
+                        class="border-solid border-2 border-black-600 p-2 mt-1 block"
+                        placeholder="Search here..."
+                        @input="filterHandler"
+                    />
+                </div>
+                <EasyDataTable
+                    :headers="manifestHeaders"
+                    :items="manifestDataResult"
+                    :search-value="searchValue"
+                    
+                    :rows-items="[25,50,100,manifestData.length]"
+                  >
+
+                  <template #item-images="item">
+                        <div class="customize-header">
+
+                            <div v-for="image in item.images" v-if="item.images && item.images != 'not_available'">
+                                <a target="_blank" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="image" v-if="image && image != 'not_available'">{{$filters.truncate(image)}}</a>
+                            </div>
+                            <span v-else-if="item.images == 'not_available'"><i class="fa fa-spin"></i>N/A</span>
+                            <span v-else>
+                                <svg aria-hidden="true" role="status" class="inline w-4 h-4 mr-3 text-gray-200 animate-spin dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="#1C64F2"/>
+                                </svg>
+                                Loading...
+                            </span>
+                            
+                        </div>
+                    </template>
+                    <template #item-item="item">
+                        {{item.manifest.item}}
+                    </template>
+                    <template #item-description="item">
+                        {{item.manifest.description}}
+                    </template>
+                    <template #item-quantity="item">
+                        {{item.pallet_item.quantity}}
+                    </template>
+                    <template #item-msrp="item">
+                        ${{item.manifest.msrp}}
+                    </template>
+                    <template #item-totalMsrp="item">
+                        ${{(item.pallet_item.quantity * item.manifest.msrp)}}
+                    </template>
+                    <template #item-pallet="item">
+                        {{item.pallet_item.pallet_number}}
+                    </template>
+                    <template #item-costcoUrl="item">
+                        <div class="customize-header">
+                            <a class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" v-if="item.manifest.item_name && item.manifest.item_name != 'not_available'" target="_blank" :href="'https://www.costco.ca/CatalogSearch?keyword='+item.item">{{item.manifest.item_name}}<span></span></a>
+                            <span v-else-if="!item.manifest.item_name">
+                                <svg aria-hidden="true" role="status" class="inline w-4 h-4 mr-3 text-gray-200 animate-spin dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="#1C64F2"/>
+                                    </svg>
+                                    Loading...
+                            </span>
+                            <span v-else>N/A</span>
+                        </div>
+                    </template>
+
+                </EasyDataTable>
+               
             </div>
         </Modal>
     </AuthenticatedLayout>

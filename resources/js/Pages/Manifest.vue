@@ -21,6 +21,9 @@ const props = defineProps({
     },
     pallets: {
         type: Array
+    },
+    types: {
+        type: Array
     }
 });
 
@@ -43,6 +46,7 @@ const form = useForm({
 });
 
 const tableSortCriteria = ref('all');
+const typeFilter = ref('all');
 
 const showFavouriteSportFilter = ref(false);
   
@@ -55,6 +59,7 @@ const headers: Header[] = [
   { text: "MSRP", value: "msrp", sortable: true},
   { text: "$ Total", value: "totalMsrp", sortable: true},
   { text: "Pallet #", value: "pallet"},
+  { text: "Type", value: "type"},
   { text: "Costco Image", value: "images"},
   { text: "Product URL", value: "costcoUrl", width: 400},
   { text: "Actions",  value: "action"}
@@ -273,12 +278,13 @@ const filterOptions = computed((): FilterOption[] => {
     totalVal.value = 0;
     let results = []
     const filterOptionsArray: FilterOption[] = [];
-    if(filterToggle.value == true){
-        selectedItems.value = []
+
+    if (typeFilter.value !== 'all') {
+        console.log(typeFilter)
         filterOptionsArray.push({
-          field: 'images',
-          comparison: '!=',
-          criteria: '',
+            field: 'type',
+            comparison: '=',
+            criteria: typeFilter.value,
         });
     }
 
@@ -304,6 +310,7 @@ const filterOptions = computed((): FilterOption[] => {
         });
         totalVal.value = basket_total.toFixed(2);
     }else{
+        console.log(filterToggle.value);
         if (filterToggle.value) {
             manifestData.value.forEach(val => {
                 if(val.item_name){
@@ -326,7 +333,10 @@ const resetHandler = () => {
     selectedItems.value = []
 }
 
-const filterToggle = ref(false);
+//const filterToggle = ref(false);
+const filterToggle = ref('clothing');
+const nameCriteria = ref('');
+const showNameFilter = ref(false);
 
 </script>
 
@@ -357,14 +367,19 @@ const filterToggle = ref(false);
                         </div>
                         <div class="m-4">
                             <div class="md:flex md:items-center mb-6 mt-6">
-                                <div class="">
+                                <!-- <div class="">
                                   <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                                    Hide N/A
+                                    Filter by Type
                                   </label>
                                 </div>
                                 <div class="mr-7">
-                                  <input type="checkbox" v-model="filterToggle">
-                                </div>
+                                  {{filterToggle}}
+                                    <select v-model="filterToggle">
+                                        <option value="both">Both</option>
+                                        <option value="clothing">Clothing</option>
+                                        <option value="mixed">Mixed</option>
+                                    </select>
+                                </div> -->
 
 
                                 <a href="/manifest-grouped"><PrimaryButton> Switch to pallet view </PrimaryButton></a>
@@ -412,11 +427,37 @@ const filterToggle = ref(false);
                         ref="dataTable"
                         :rows-items="[25,50,100,manifestData.length]"
                       >
+
+                        <template #header-type="header">
+                          <div class="filter-column">
+                            <span class="cursor-pointer inline-flex items-baseline" @click.stop="showNameFilter=!showNameFilter"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+</svg><span>{{ header.text  }}</span>
+</span>
+                            <div class="filter-menu" v-if="showNameFilter">
+                              <!-- <input v-model="nameCriteria"/> -->
+                              <select
+                                class="favouriteSport-selector"
+                                v-model="typeFilter"
+                                name="pallet"
+                                @change="resetHandler"
+                              >
+                                <option v-for="type in types" :value="type.type">
+                                  {{type.type}}
+                                </option>
+                                <option value="all">
+                                  all
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+                        </template>
+
                         <template #header-pallet="header">
                           <div class="filter-column">
                             <span class="cursor-pointer inline-flex items-baseline" @click.stop="showFavouriteSportFilter=!showFavouriteSportFilter"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
   <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
-</svg><span>{{ header.text }}</span>
+</svg><span>{{ header.text  }}</span>
 </span>
                             
                             <div class="filter-menu filter-sport-menu" v-if="showFavouriteSportFilter">

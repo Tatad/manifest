@@ -18,9 +18,9 @@ class ManifestImport implements ToModel, WithHeadingRow
     */
     public function model(array $row)
     {
-        $manifest = Manifest::where(['item' => $row['item']])->first();
+        
+        $manifest = PalletItem::where(['item_number' => $row['item'], 'pallet_number' => $row['pallet']])->first();
         if(collect($manifest)->isEmpty()){
-
             $manifest = new Manifest([
                 "item" => $row['item'],
                 "description" => $row['description'],
@@ -44,12 +44,9 @@ class ManifestImport implements ToModel, WithHeadingRow
             }
             
         }else{
-            $pallet = new PalletItem();
-            $pallet->item_number = $row['item'];
-            $pallet->pallet_number = $row['pallet'];
-            $pallet->quantity = $row['qty'];
-            $pallet->save();
-            return $pallet;
+            $manifest->quantity = ($manifest->quantity + $row['qty']);
+            $manifest->save();
+            return $manifest;
         }
     }
 }

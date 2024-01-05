@@ -71,9 +71,10 @@ class ManifestController extends Controller
                     'features' => $data->manifest->features,
                     'item_name' => $data->manifest->item_name,
                     //'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
-                    'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : $data->manifest->images,
+                    'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : json_decode($data->manifest->images,true),
                     'costcoUrl' => $data->manifest->item_name,
-                    'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2)
+                    'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2),
+                    'type' => $data->manifest->type
                 ];
             }
         });
@@ -83,10 +84,10 @@ class ManifestController extends Controller
         foreach($pallets as $pallet){
             $palletArray[] = ['pallet' => $pallet];
         }
-
         return Inertia::render('Manifest', [
             'manifests' => collect($manifestData)->filter()->values()->toArray(),
-            'pallets'   => $palletArray
+            'pallets'   => $palletArray,
+            'types' => [['type' => 'Clothing'],['type' => 'Mixed']]
         ]);
     }
 
@@ -99,8 +100,9 @@ class ManifestController extends Controller
             $manifest = [];
             foreach($val as $d){
                 if(($d['manifest']) && !isset($d['pallet_download'])){
-                    $sum += $d['manifest']['total'];
+                    $sum += ($d['manifest']['msrp'] * $d['quantity']);
                     $d['manifest']['pallet'] = $key;
+                    $d['manifest']['images'] = ($d['manifest']['type'] && $d['manifest']['type'] == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$d['manifest']['item']."-894"] : json_decode($d['manifest']['images'],true);
                     $manifest[] = $d['manifest'];
                 }
             }
@@ -130,7 +132,7 @@ class ManifestController extends Controller
             $sum = 0;
             $manifest = [];
             foreach($val as $d){
-                $sum += $d['manifest']['total'];
+                $sum += ($d['manifest']['msrp'] * $d['pallet_item']['quantity']);
                 $manifest[] = $d['manifest'];
             }
 
@@ -233,6 +235,7 @@ class ManifestController extends Controller
 
     public function batchDownloadCsv(Request $request){
         $input = $request->all();
+        //dd($input['selected']);
         $manifests = PalletDownload::with('manifest','pallet_item')->where('group_id', $input['selected'])->get();
         foreach(collect($manifests)->values()->toArray() as $data){
             $manifestData[] = [
@@ -278,6 +281,8 @@ class ManifestController extends Controller
 
     public function restore(Request $request){
         $input = $request->all();
+        $manifest = PalletDownload::where('group_id', $input['selected'])->delete();
+        
         $manifest = PalletDownload::where('group_id', $input['selected'])->delete();
         return 'success';
     }
