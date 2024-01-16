@@ -40,6 +40,13 @@ Route::post('/account', [RegistrationController::class, 'store'])->name('account
 Route::post('/authenticate', [RegistrationController::class, 'authenticate'])->name('authenticate');
 
 Route::middleware('auth')->group(function () {
+    // Route::group(['middleware' => ['web', 'DropboxAuthenticated']], function(){
+    //     Route::get('dropbox', function(){
+    //         dd("!23");
+    //         return Dropbox::post('users/get_current_account');
+    //     });
+    // });
+
     Route::get('/', [ManifestController::class, 'manifest'])->name('home');
     Route::get('/manifest', [ManifestController::class, 'manifest'])->name('manifest');
     Route::get('/manifest-grouped', [ManifestController::class, 'manifestGroupedView'])->name('manifestGroupedView');
@@ -65,6 +72,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/manifest-upload-test', [ManifestController::class, 'read'])->name('read');
+
+    Route::post('/restore-image', [ManifestController::class, 'restoreImage']);
+
+    Route::get('/test', [ManifestController::class, 'test']);
 });
 
 Route::get('/barcode_qr_reader', 'App\Http\Controllers\ImageUploadController@page');

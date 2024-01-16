@@ -28,6 +28,7 @@ const props = defineProps({
 });
 
 const manifestData = ref(props.manifests)
+const palletsData = ref(props.pallets)
 const selectedItems = ref<Item[]>([]);
 const dataTable = ref();
 const type = ref('');
@@ -38,6 +39,7 @@ const form = useForm({
     id: 0,
     description: '',
     item: '',
+    type: '',
     pallet: 0,
     images: [],
     features: '',
@@ -49,10 +51,10 @@ const tableSortCriteria = ref('all');
 const typeFilter = ref('all');
 
 const showFavouriteSportFilter = ref(false);
+const showNameFilter = ref(false);
   
 const headers: Header[] = [
   { text: "", value: "selected" },
-  { text: "ID", value: "id", sortable: true },
   { text: "Item #", value: "item", sortable: true},
   { text: "Description", value: "description", sortable: true, width: 400},
   { text: "Quantity", value: "quantity", sortable: true},
@@ -66,6 +68,7 @@ const headers: Header[] = [
 ];
 
 const openManifestItem = ref(false);
+const openRestoreDefaultImageConfirm = ref(false);
 const sendManifestConfirm = ref(false);
 
 const updateManifestItem = (item) => {
@@ -75,16 +78,41 @@ const updateManifestItem = (item) => {
     form.pallet = item.pallet;
     form.features = item.features;
     form.images = item.images;
+    form.type = item.type;
     openManifestItem.value = true;
 };
 
 const closeModal = () => {
     openManifestItem.value = false;
+    openRestoreDefaultImageConfirm.value = false;
     sendManifestConfirm.value = false;
 };
 
 const addRow = () => {
     form.images.push([]);
+}
+
+const restoreDefaultImageModal = () => {
+    openManifestItem.value = false;
+    openRestoreDefaultImageConfirm.value = true
+}
+
+const restoreDefaultImage = () => {
+    console.log(form)
+    axios.post('/restore-image', form).then((response) => {
+        form.reset();
+        selectedItems.value = [];
+        openManifestItem.value = false;
+        sendManifestConfirm.value = false;
+        openRestoreDefaultImageConfirm.value = false
+        form.get(route('manifest'), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                
+            }
+        });
+    });
 }
 
 const removeElement = (index) => {
@@ -134,7 +162,6 @@ const submitManifest = (item) => {
     if(selectedItems.value){
         selectedItems.value.forEach(val => {
             selectedItemNumber.push({"item": val.item, "pallet" : val.pallet});
-           //or if you pass float numbers , use parseFloat()
         });
     }
 
@@ -241,7 +268,7 @@ const filterHandler = (e) =>{
         let filterData = manifestData.value.filter(function(data) {
             let transformedId = data.id.toString();
             let transformedMsrp = data.msrp.toString();
-            console.log(data)
+            //console.log(data)
             // if(data.item.match(searchValue.value)){
             //     //console.log(data)
             //     results.push(data)
@@ -277,15 +304,32 @@ const filterOptions = computed((): FilterOption[] => {
     let basket_total = 0;
     totalVal.value = 0;
     let results = []
+    let palletsArray = []
+    let palletFilterResult = []
     const filterOptionsArray: FilterOption[] = [];
 
     if (typeFilter.value !== 'all') {
-        console.log(typeFilter)
         filterOptionsArray.push({
             field: 'type',
             comparison: '=',
             criteria: typeFilter.value,
         });
+    }
+    //condition to filter out the pallet based on the chosen Type
+    if (typeFilter.value !== 'all') {
+        manifestData.value.filter(function(data) {
+            if(data.type.match(typeFilter.value)){
+                palletsData.value = []
+                palletsArray.push(data.pallet)
+            }
+        });
+        const uniqArray = [...new Set(palletsArray)];
+           
+        uniqArray.forEach(val => {
+            console.log(val)
+            palletFilterResult.push({'pallet':val})
+        })
+        palletsData.value = palletFilterResult
     }
 
     if (tableSortCriteria.value !== 'all') {
@@ -296,13 +340,10 @@ const filterOptions = computed((): FilterOption[] => {
         });
     }
     if(tableSortCriteria.value !== 'all'){
-
-    
         manifestData.value.filter(function(data) {
-            // if(data.pallet.match(tableSortCriteria.value)){
-            //     //console.log(data)
-            //     results.push(data)
-            // }
+            if(data.pallet.match(tableSortCriteria.value)){
+                results.push(data)
+            }
         });
         const uniq = [...new Set(results)];
         uniq.forEach(val => {
@@ -310,18 +351,9 @@ const filterOptions = computed((): FilterOption[] => {
         });
         totalVal.value = basket_total.toFixed(2);
     }else{
-        console.log(filterToggle.value);
-        if (filterToggle.value) {
-            manifestData.value.forEach(val => {
-                if(val.item_name){
-                    basket_total += Number(val.totalMsrp);
-                }
-            });
-        } else {
-            manifestData.value.forEach(val => {
-                basket_total += Number(val.totalMsrp);
-            });
-        }
+        manifestData.value.forEach(val => {
+            basket_total += Number(val.totalMsrp);
+        });
         
         totalVal.value = basket_total.toFixed(2);
     }
@@ -333,16 +365,10 @@ const resetHandler = () => {
     selectedItems.value = []
 }
 
-//const filterToggle = ref(false);
-const filterToggle = ref('clothing');
-const nameCriteria = ref('');
-const showNameFilter = ref(false);
-
 </script>
 
 <template>
     <Head title="Manifest" />
-
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manifest</h2>
@@ -367,20 +393,6 @@ const showNameFilter = ref(false);
                         </div>
                         <div class="m-4">
                             <div class="md:flex md:items-center mb-6 mt-6">
-                                <!-- <div class="">
-                                  <label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                                    Filter by Type
-                                  </label>
-                                </div>
-                                <div class="mr-7">
-                                  {{filterToggle}}
-                                    <select v-model="filterToggle">
-                                        <option value="both">Both</option>
-                                        <option value="clothing">Clothing</option>
-                                        <option value="mixed">Mixed</option>
-                                    </select>
-                                </div> -->
-
 
                                 <a href="/manifest-grouped"><PrimaryButton> Switch to pallet view </PrimaryButton></a>
                             </div>
@@ -399,19 +411,13 @@ const showNameFilter = ref(false);
 
                             <Modal :show="sendManifestConfirm" @close="closeModal">
                                 <div class="p-6">
-
                                     <div class="mt-6">
-
                                         <h1>Are you sure you want to send the selected manifest?</h1>
-                                        
                                     </div>
-
                                     <div class="mt-6 flex justify-end">
                                         <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
                                         <PrimaryButton v-if="type == 'CSV'" @click="submitManifest"> Proceed </PrimaryButton>
                                         <PrimaryButton v-if="type == 'PDF'" @click="downloadManifestPdf"> Proceed </PrimaryButton>
-
-                                        
                                     </div>
                                 </div>
                             </Modal>
@@ -435,11 +441,10 @@ const showNameFilter = ref(false);
 </svg><span>{{ header.text  }}</span>
 </span>
                             <div class="filter-menu" v-if="showNameFilter">
-                              <!-- <input v-model="nameCriteria"/> -->
                               <select
                                 class="favouriteSport-selector"
                                 v-model="typeFilter"
-                                name="pallet"
+                                name="type"
                                 @change="resetHandler"
                               >
                                 <option v-for="type in types" :value="type.type">
@@ -459,7 +464,6 @@ const showNameFilter = ref(false);
   <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
 </svg><span>{{ header.text  }}</span>
 </span>
-                            
                             <div class="filter-menu filter-sport-menu" v-if="showFavouriteSportFilter">
                               <select
                                 class="favouriteSport-selector"
@@ -467,7 +471,7 @@ const showNameFilter = ref(false);
                                 name="pallet"
                                 @change="resetHandler"
                               >
-                                <option v-for="pallet in pallets" :value="pallet.pallet">
+                                <option v-for="pallet in palletsData" :value="pallet.pallet">
                                   {{pallet.pallet}}
                                 </option>
                                 <option value="all">
@@ -479,7 +483,6 @@ const showNameFilter = ref(false);
                         </template>
                         <template #item-images="item">
                             <div class="customize-header">
-
                                 <div v-for="image in item.images" v-if="item.images && item.images != 'not_available'">
                                     <a target="_blank" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="image" v-if="image && image != 'not_available'">{{$filters.truncate(image)}}</a>
                                 </div>
@@ -515,18 +518,28 @@ const showNameFilter = ref(false);
                             </div>
                         </template>
 
-
                     </EasyDataTable>
-                    
                 </div>
             </div>
         </div>
+
+        <Modal :show="openRestoreDefaultImageConfirm" @close="closeModal">
+            <div class="p-6">
+                <div class="mt-6">
+                    <h1>Are you sure you want to replace the first image to the original Costco image?</h1>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
+                    <PrimaryButton @click="restoreDefaultImage"> Proceed </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
+
         <Modal :show="openManifestItem" @close="closeModal">
             <div class="p-6">
 
                 <div class="mt-6">
                     <InputLabel for="item" value="Item Number"/>
-
                     <TextInput
                         id="item"
                         v-model="form.item"
@@ -534,9 +547,7 @@ const showNameFilter = ref(false);
                         class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                         placeholder="Item Number"
                     />
-
                     <InputError :message="form.errors.item" class="mt-2" />
-                    
                 </div>
 
                 <div class="mt-6">
@@ -549,24 +560,20 @@ const showNameFilter = ref(false);
                         class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                         placeholder="Description"
                     />
-
                     <InputError :message="form.errors.description" class="mt-2" />
-                    
                 </div>
 
                 <div class="mt-6">
                     <InputLabel for="pallet" value="Palet Number"/>
-
                     <input type="text" readonly v-model="form.pallet" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4">
-
                     <InputError :message="form.errors.pallet" class="mt-2" />
-                    
                 </div>
                 <InputLabel class="mt-6" for="pallet" value="Image URL"/>
                 <button class="inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" @click="addRow">Add row</button>
+
+                <button class="ml-2 inline-flex items-center px-4 py-2 bg-gray-800 dark:bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-white dark:text-gray-800 uppercase tracking-widest hover:bg-gray-700 dark:hover:bg-white focus:bg-gray-700 dark:focus:bg-white active:bg-gray-900 dark:active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" @click="restoreDefaultImageModal" v-if="form.type == 'Mixed'">Restore Default Costco image</button>
+
                 <div v-for="(row, index) in form.images" v-if="form.images && form.images != 'not_available'">
-                      
-                        
                         <TextInput
                             id="image"
                             :value="row"
@@ -575,15 +582,11 @@ const showNameFilter = ref(false);
                             class="mt-1 block w-3/4"
                             placeholder="Image URL"
                         />
-                   
                         <a v-on:click="removeElement(index);" style="cursor: pointer" class="mt-2 inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-red-500 hover:text-white dark:hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150">Remove</a>
-                    
-
                 </div>
 
                 <div class="mt-6">
                     <InputLabel for="features" value="Features"/>
-
                     <TextArea
                         id="features"
                         v-model="form.features"
@@ -591,16 +594,12 @@ const showNameFilter = ref(false);
                         class="mt-1 block w-3/4"
                         placeholder="Features"
                     />
-
                     <InputError :message="form.errors.features" class="mt-2" />
-                    
                 </div>
 
                 <div class="mt-6 flex justify-end">
                     <SecondaryButton class="mr-4" @click="closeModal"> Cancel </SecondaryButton>
                     <PrimaryButton @click="submit"> Save </PrimaryButton>
-
-                    
                 </div>
             </div>
         </Modal>

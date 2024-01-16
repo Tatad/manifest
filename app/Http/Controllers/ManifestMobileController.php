@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\PdfToText\Pdf;
 use App\Models\Manifest;
+use App\Models\ScannedItem;
 use App\Models\PalletItem;
 use App\Models\PalletDownload;
 use App\Imports\ManifestImport;
@@ -48,6 +49,13 @@ class ManifestMobileController extends Controller
         }
         return $manifest;
         dd($input);
+    }
+
+    public function sendUpc(Request $request){
+        $input = $request->all();
+        $data = new ScannedItem();
+        $data->upc_code = $input['upc_code'];
+        $data->save();
     }
 }
 

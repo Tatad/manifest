@@ -51,6 +51,7 @@ const headers: Header[] = [
   { text: "Downloaded at", value: "downloaded_at", sortable: true },
   { text: "Manifest name", value: "group_name", sortable: true, width: 500 },
   { text: "$ Total", value: "sum", sortable: true },
+  { text: "Actions",  value: "action"}
 ];
 
 
@@ -62,6 +63,7 @@ const manifestHeaders: Header[] = [
   { text: "MSRP", value: "msrp", sortable: true},
   { text: "$ Total", value: "totalMsrp", sortable: true},
   { text: "Pallet #", value: "pallet"},
+  { text: "Type", value: "type"},
   { text: "Costco Image", value: "images"},
   { text: "Product URL", value: "costcoUrl", width: 400}
 ];
@@ -342,11 +344,14 @@ const filterHandler = (e) =>{
                         :headers="headers"
                         :items="manifests"
                         :search-value="searchValue"
-                        @click-row="showRow"
                         show-index
                       >
                         <template #item-downloaded_at="item">
                             {{item.downloaded_at}}
+                        </template>
+
+                        <template #item-action="item">
+                            <PrimaryButton @click="showRow(item)"> View Items </PrimaryButton>
                         </template>
 
                         <template #item-group_name="item">
@@ -385,12 +390,6 @@ const filterHandler = (e) =>{
 
                         <template #item-sum="item">
                             ${{item.sum.toFixed(2)}}
-                        </template>
-
-                        <template #item-action="item">
-                            <div class="customize-header pt-2 pb-2">
-                            <PrimaryButton @click="updateManifestItem(item)"> Update Manifest Name </PrimaryButton>
-                            </div>
                         </template>
 
                         <template #item-selected="item">
@@ -481,8 +480,7 @@ const filterHandler = (e) =>{
 
                   <template #item-images="item">
                         <div class="customize-header">
-
-                            <div v-for="image in item.images" v-if="item.images && item.images != 'not_available'">
+                            <div v-for="image in item.manifest.parsedImages" v-if="item.manifest.parsedImages && item.manifest.images != 'not_available'">
                                 <a target="_blank" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="image" v-if="image && image != 'not_available'">{{$filters.truncate(image)}}</a>
                             </div>
                             <span v-else-if="item.images == 'not_available'"><i class="fa fa-spin"></i>N/A</span>
@@ -507,6 +505,9 @@ const filterHandler = (e) =>{
                     </template>
                     <template #item-msrp="item">
                         ${{item.manifest.msrp}}
+                    </template>
+                    <template #item-type="item">
+                        {{item.manifest.type}}
                     </template>
                     <template #item-totalMsrp="item">
                         ${{(item.pallet_item.quantity * item.manifest.msrp)}}

@@ -29,7 +29,8 @@ class ManifestImport implements ToModel, WithHeadingRow
                 "msrp" => $row['msrp_unit'],
                 "pallet" => $row['pallet'],
                 "type" =>  $row['type'],
-                "pallets" => json_encode([$row['pallet'] => $row['qty']])
+                "pallets" => json_encode([$row['pallet'] => $row['qty']]),
+                "images" => ($row['type'] && $row['type'] == 'Mixed') ? json_encode(["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$row['item']."-894"]) : ""
             ]);
 
             $manifest->save();

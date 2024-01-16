@@ -19,6 +19,7 @@ use App\Imports\PalletImport;
 use App\Exports\ManifestExport;
 use DB;
 use Carbon\Carbon;
+use Dcblogdev\Dropbox\Facades\Dropbox;
 
 class ManifestController extends Controller
 {
@@ -36,8 +37,8 @@ class ManifestController extends Controller
                     'msrp' => $data->manifest->msrp,
                     'features' => $data->manifest->features,
                     'item_name' => $data->manifest->item_name,
-                    //'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
-                    'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : $data->manifest->images,
+                    'images' => ($data->manifest->images != 'not_available') ? json_decode($data->manifest->images,true) : $data->manifest->images,
+                    // 'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : $data->manifest->images,
                     'costcoUrl' => $data->manifest->item_name,
                     'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2)
                 ];
@@ -70,8 +71,8 @@ class ManifestController extends Controller
                     'msrp' => $data->manifest->msrp,
                     'features' => $data->manifest->features,
                     'item_name' => $data->manifest->item_name,
-                    //'images' => ($itemData->images != 'not_available') ? json_decode($itemData->images,true) : $itemData->images,
-                    'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : json_decode($data->manifest->images,true),
+                    'images' => ($data->manifest->images != 'not_available') ? json_decode($data->manifest->images,true) : $data->manifest->images,
+                    // 'images' => ($data->manifest->type && $data->manifest->type == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$data->manifest->item."-894"] : json_decode($data->manifest->images,true),
                     'costcoUrl' => $data->manifest->item_name,
                     'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2),
                     'type' => $data->manifest->type
@@ -82,8 +83,9 @@ class ManifestController extends Controller
         $pallets = collect($manifests)->groupBy('pallet_number')->keys();
         $palletArray = [];
         foreach($pallets as $pallet){
-            $palletArray[] = ['pallet' => $pallet];
+            $palletArray[] = ['pallet' => (string)$pallet];
         }
+            //dd(collect($manifestData[0])->filter()->values()->toArray());
         return Inertia::render('Manifest', [
             'manifests' => collect($manifestData)->filter()->values()->toArray(),
             'pallets'   => $palletArray,
@@ -100,13 +102,15 @@ class ManifestController extends Controller
             $manifest = [];
             foreach($val as $d){
                 if(($d['manifest']) && !isset($d['pallet_download'])){
+                        //dd(json_decode($d['manifest']['images'],true));
                     $sum += ($d['manifest']['msrp'] * $d['quantity']);
                     $d['manifest']['pallet'] = $key;
-                    $d['manifest']['images'] = ($d['manifest']['type'] && $d['manifest']['type'] == "Mixed") ? ["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$d['manifest']['item']."-894"] : json_decode($d['manifest']['images'],true);
+                    // $d['manifest']['images'] = ($d['manifest']['type'] && $d['manifest']['type'] == "Mixed") ? json_decode($d['manifest']['images'],true) : json_decode(json_encode($d['manifest']['images']),true);
+                    $d['manifest']['parsedImages'] = ($d['manifest']['type'] && $d['manifest']['type'] == "Mixed") ? json_decode(($d['manifest']['images']),true) : json_decode(($d['manifest']['images']),true);
                     $manifest[] = $d['manifest'];
                 }
             }
-
+                //["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$d['manifest']['item']."-894"]
             if($sum != 0){
                 $manifestDataResult[] = [
                     'group_id' => null,
@@ -118,7 +122,7 @@ class ManifestController extends Controller
                 ];
             }
         }
-
+            //dd(collect($manifestDataResult[0])->filter()->values()->toArray());
         return Inertia::render('ManifestGroupedView', [
             'manifests'  => $manifestDataResult
         ]);
@@ -133,6 +137,7 @@ class ManifestController extends Controller
             $manifest = [];
             foreach($val as $d){
                 $sum += ($d['manifest']['msrp'] * $d['pallet_item']['quantity']);
+                $d['manifest']['parsedImages'] = ($d['manifest']['type'] && $d['manifest']['type'] == "Mixed") ? json_decode(($d['manifest']['images']),true) : json_decode(($d['manifest']['images']),true);
                 $manifest[] = $d['manifest'];
             }
 
@@ -352,6 +357,22 @@ class ManifestController extends Controller
         }
         return $manifest;
         dd($input);
+    }
+
+    public function restoreImage(Request $request){
+        $input = $request->all();
+
+        $manifest = Manifest::where('id', $input['id'])->update(['images' => json_encode(["https://images.costco-static.com/ImageDelivery/imageService?profileId=12026539&itemId=".$input['item']."-894"])]);
+        return 'success';
+    }
+
+    public function test(){
+        $image = public_path('/images/barcode_test.jpg');
+
+        $file = \File::get($image);
+        
+        $file = Dropbox::files()->upload($path = '/scanned_images', $image);
+        dd($file);
     }
 }
 

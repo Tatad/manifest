@@ -51,13 +51,13 @@ const headers: Header[] = [
 
 const manifestHeaders: Header[] = [
   { text: "", value: "selected" },
-  { text: "ID", value: "id", sortable: true },
   { text: "Item #", value: "item", sortable: true},
   { text: "Description", value: "description", sortable: true, width: 400},
   { text: "Quantity", value: "quantity", sortable: true},
   { text: "MSRP", value: "msrp", sortable: true},
   { text: "$ Total", value: "totalMsrp", sortable: true},
   { text: "Pallet #", value: "pallet"},
+  { text: "Type", value: "type"},
   { text: "Costco Image", value: "images"},
   { text: "Product URL", value: "costcoUrl", width: 400}
 ];
@@ -429,7 +429,7 @@ const downloadManifestPdf = (item) => {
                   <template #item-images="item">
                             <div class="customize-header">
 
-                                <div v-for="image in item.images" v-if="item.images && item.images != 'not_available'">
+                                <div v-for="image in item.parsedImages" v-if="item.parsedImages && item.parsedImages != 'not_available'">
                                     <a target="_blank" class="underline text-blue-600 hover:text-blue-800 visited:text-purple-600" :href="image" v-if="image && image != 'not_available'">{{$filters.truncate(image)}}</a>
                                 </div>
                                 <span v-else-if="item.images == 'not_available'"><i class="fa fa-spin"></i>N/A</span>
@@ -456,6 +456,10 @@ const downloadManifestPdf = (item) => {
                                 </span>
                                 <span v-else>N/A</span>
                             </div>
+                        </template>
+
+                        <template #item-totalMsrp="item">
+                            <p>${{item.quantity * item.msrp}}</p>
                         </template>
 
                   </EasyDataTable>
