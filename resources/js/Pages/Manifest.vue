@@ -375,6 +375,11 @@ const resetHandler = () => {
         </template>
 
         <div class="py-3">
+
+        <span class="tag">
+          <input type="file" accept="image/*" capture="camera">
+        </span>
+
             <div class="max-w-8xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
