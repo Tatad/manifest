@@ -60,9 +60,11 @@ class ManifestMobileController extends Controller
 
         $input = $request->all();
         $path = $request->file('image')->store('/images');
-        $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($path, strpos($path, "/") + 1);
         
+        $storagePath = storage_path('app/images/'.$filename);
+        $filename = substr($path, strpos($path, "/") + 1);
+
         exec('zbarimg -S enable '.$storagePath, $result);
         dd($result);
         // $file = new Filesystem;
