@@ -20,6 +20,8 @@ use App\Imports\PalletImport;
 use App\Exports\ManifestExport;
 use DB;
 use Carbon\Carbon;
+use Dcblogdev\Dropbox\Facades\Dropbox;
+use Illuminate\Filesystem\Filesystem;
 
 class ManifestMobileController extends Controller
 {
@@ -52,10 +54,37 @@ class ManifestMobileController extends Controller
     }
 
     public function sendUpc(Request $request){
-        $input = $request->all();
-        $data = new ScannedItem();
-        $data->upc_code = $input['upc_code'];
-        $data->save();
+        $image = public_path('/images/barcode_test.jpg');
+        $zbar = new \TarfinLabs\ZbarPhp\Zbar($imagePath);
+        dd($zbar);
+        // $file = new Filesystem;
+        // $storagePathToClear = storage_path('app/images/');
+        // $file->cleanDirectory($storagePathToClear);
+
+        // $input = $request->all();
+        // $path = $request->file('image')->store('/images');
+        // $filename = substr($path, strpos($path, "/") + 1);
+
+        // $storagePath = storage_path('app/images/'.$filename);
+        // $result = Dropbox::files()->upload($path = '/scanned_images', $storagePath);
+
+        // exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -q '.$storagePath, $result);
+
+        // dd($result);
+        // return 'success';
+        // dd($storagePath);
+        // $input = $request->all();
+        // //dd($file);
+        // $image = public_path('/images/barcode_test.jpg');
+
+        // // $file = \File::get($image);
+        // dd($input);
+
+        // $result = Dropbox::files()->upload($path = '/scanned_images', $image);
+        // dd($result);
+        // $data = new ScannedItem();
+        // $data->upc_code = $input['upc_code'];
+        // $data->save();
     }
 }
 
