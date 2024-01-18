@@ -54,9 +54,17 @@ class ManifestMobileController extends Controller
     }
 
     public function sendUpc(Request $request){
-        $image = public_path('/images/barcode_test.jpg');
-        $zbar = new \TarfinLabs\ZbarPhp\Zbar($imagePath);
-        dd($zbar);
+        $file = new Filesystem;
+        $storagePathToClear = storage_path('app/images/');
+        $file->cleanDirectory($storagePathToClear);
+
+        $input = $request->all();
+        $path = $request->file('image')->store('/images');
+        $storagePath = storage_path('app/images/'.$filename);
+        $filename = substr($path, strpos($path, "/") + 1);
+        
+        exec('zbarimg -S enable '.$storagePath, $result);
+        dd($result);
         // $file = new Filesystem;
         // $storagePathToClear = storage_path('app/images/');
         // $file->cleanDirectory($storagePathToClear);
@@ -66,10 +74,12 @@ class ManifestMobileController extends Controller
         // $filename = substr($path, strpos($path, "/") + 1);
 
         // $storagePath = storage_path('app/images/'.$filename);
-        // $result = Dropbox::files()->upload($path = '/scanned_images', $storagePath);
+        // //$result = Dropbox::files()->upload($path = '/scanned_images', $storagePath);
 
-        // exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -q '.$storagePath, $result);
-
+        // exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
+        // foreach($result as $data){
+        //     dd($data);
+        // }
         // dd($result);
         // return 'success';
         // dd($storagePath);
