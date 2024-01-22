@@ -55,7 +55,13 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
         ],
-
+        'dropbox' => [
+            'driver' => 'dropbox',
+            'key' => env('DROPBOX_CLIENT_ID'),
+            'secret' => env('DROPBOX_SECRET_ID'),
+            'authorization_token' => env('DROPBOX_ACCESS_TOKEN'),
+            'scopes' => 'account_info.read files.metadata.write files.metadata.read files.content.write files.content.read',
+        ],
     ],
 
     /*
