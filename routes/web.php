@@ -40,12 +40,16 @@ Route::post('/account', [RegistrationController::class, 'store'])->name('account
 Route::post('/authenticate', [RegistrationController::class, 'authenticate'])->name('authenticate');
 
 Route::middleware('auth')->group(function () {
-    // Route::group(['middleware' => ['web', 'DropboxAuthenticated']], function(){
-    //     Route::get('dropbox', function(){
-    //         dd("!23");
-    //         return Dropbox::post('users/get_current_account');
-    //     });
-    // });
+    Route::group(['middleware' => ['web', 'DropboxAuthenticated']], function(){
+        Route::get('dropbox', function(){
+            //dd("!23");
+            return Dropbox::post('users/get_current_account');
+        });
+    });
+
+    Route::get('dropbox/connect', function(){
+        return Dropbox::connect();
+    });
 
     Route::get('/', [ManifestController::class, 'manifest'])->name('home');
     Route::get('/manifest', [ManifestController::class, 'manifest'])->name('manifest');
@@ -80,5 +84,13 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/barcode_qr_reader', 'App\Http\Controllers\ImageUploadController@page');
 Route::post('/barcode_qr_reader/upload', 'App\Http\Controllers\ImageUploadController@upload')->name('image.upload');
+
+
+Route::get('/scanner', 'App\Http\Controllers\ScannerController@index')->name('scanner');
+Route::get('/lookup', 'App\Http\Controllers\ScannerController@lookup')->name('lookup');
+Route::post('/lookupItem', 'App\Http\Controllers\ScannerController@lookupItem')->name('lookupItem');
+Route::get('/scanned-list', 'App\Http\Controllers\ScannerController@scannedList')->name('scannedList');
+Route::post('/scan', 'App\Http\Controllers\ScannerController@scan')->name('scan');
+Route::post('/add-item-number', 'App\Http\Controllers\ScannerController@addItemNumber')->name('addItemNumber');
 
 require __DIR__.'/auth.php';

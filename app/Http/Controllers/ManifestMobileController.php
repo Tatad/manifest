@@ -65,7 +65,7 @@ class ManifestMobileController extends Controller
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($path, strpos($path, "/") + 1);
 
-        exec('zbarimg -S enable '.$storagePath, $result);
+        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
         dd($result);
         // $file = new Filesystem;
         // $storagePathToClear = storage_path('app/images/');

@@ -1,24 +1,56 @@
-<script setup>
-import { ref } from "vue";
-import { StreamBarcodeReader } from "vue-barcode-reader";
+<script  lang="ts" setup>
+  import { ref, computed } from "vue";
+  import GuestLayout from '@/Layouts/GuestLayout.vue';
+  import { Head } from '@inertiajs/vue3';
+  import PrimaryButton from '@/Components/PrimaryButton.vue';
+  import { useForm } from '@inertiajs/vue3';
 
-const decodedText = ref("");
+  const form = useForm({
+    image: ''
+  });
 
-const onLoaded = () => {
-  console.log("loaded");
-};
+  let onChange = (event) => {
+      form.image = event.target.files ? event.target.files[0] : null;
+  }
 
-const onDecode = (text) => {
-  decodedText.value = text;
-};
+  const submit = () => {
+    if (form.image) {
+      form.post(route('scan'), {
+          preserveScroll: true,
+          preserveState: true,
+          onSuccess: () => {
+              form.reset()
+              form.get(route('scanner'), {
+                  preserveScroll: true,
+                  preserveState: true,
+                  onSuccess: () => {
+                      
+                  }
+              });
+          }
+      });
+    }
+    console.log('submit')
+  }
 </script>
 
 <template>
-  <StreamBarcodeReader @decode="onDecode" @loaded="onLoaded"></StreamBarcodeReader>
-  <h2>The decoded value in QR/barcode is</h2>
-  <h2>{{ decodedText }}</h2>
+  <Head title="Scanned List" />
+  <GuestLayout>
+    <template #header>
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Scanned List</h2>
+    </template>
 
-  
+    <div class="py-3">
+
+      <span class="tag">
+        <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"></label> -->
+<input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange">
+
+        <PrimaryButton class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
+      </span>
+    </div>
+  </GuestLayout>
 </template>
 
 <style scoped>
