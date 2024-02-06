@@ -55,7 +55,6 @@ class ScannerController extends Controller
     }
 
     public function scan(Request $request){
-        dd(Dropbox::files());
         $input = $request->all();
 
         $file = new Filesystem;
@@ -79,7 +78,6 @@ class ScannerController extends Controller
                     $upc_code = UpcCode::where('upc_code', $item)->first();
 
                     if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()) {
-                        
                         $image = Dropbox::files()->upload($path = '', $storagePath);
                         $decodedImage = json_decode($image,true);
                         $imagePath = $decodedImage['path_display'];
