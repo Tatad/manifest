@@ -160,7 +160,7 @@
         </div>
       </div>
       <div v-if="selected == 'item'">
-        <InputLabel for="item" value="Item Number"/>
+        <InputLabel for="item"  class="dark:text-white" value="Item Number"/>
         <div class="grid grid-cols-2 gap-1">
           <TextInput
               id="item"
@@ -275,7 +275,7 @@
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item UPC Code"/>
+          <InputLabel for="item" class="dark:text-white" value="Item UPC Code"/>
           <TextInput
               id="item"
               v-model="itemInfo.upc_code"

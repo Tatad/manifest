@@ -39,7 +39,7 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
+        exec('zbarimg -S enable '.$storagePath, $result);
 
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
@@ -65,7 +65,7 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
+        exec('zbarimg -S enable '.$storagePath, $result);
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
                 $code = explode(":", $data);
@@ -76,22 +76,22 @@ class ScannerController extends Controller
                     $upc_code = UpcCode::where('upc_code', $item)->first();
 
                     if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()){
-                        $image = Dropbox::files()->upload($path = '', $storagePath);
-                        $decodedImage = json_decode($image,true);
-                        $imagePath = $decodedImage['path_display'];
+                        // $image = Dropbox::files()->upload($path = '', $storagePath);
+                        // $decodedImage = json_decode($image,true);
+                        // $imagePath = $decodedImage['path_display'];
 
-                        $token = DB::table('dropbox_tokens')->first();
+                        // $token = DB::table('dropbox_tokens')->first();
 
-                        $adapter = \Storage::disk('dropbox')->getAdapter();
-                        $client = $adapter->getClient();
-                        $client->setAccessToken($token->access_token);
+                        // $adapter = \Storage::disk('dropbox')->getAdapter();
+                        // $client = $adapter->getClient();
+                        // $client->setAccessToken($token->access_token);
 
-                        $link = $client->createSharedLinkWithSettings($imagePath);
-                        $decodedImage = json_decode($image,true);
+                        // $link = $client->createSharedLinkWithSettings($imagePath);
+                        // $decodedImage = json_decode($image,true);
                         $newItem = new ScannedItem();
                         $newItem->item = null;
                         $newItem->upc_code = $item;
-                        $newItem->image_name = $link['url'].'&raw=1';
+                        //$newItem->image_name = $link['url'].'&raw=1';
                         $newItem->save();
                         return Inertia::render('Scanner',['message' => 'UPC code successfully added.', 'status' => 'success']);
                     } else {
