@@ -76,18 +76,18 @@ class ScannerController extends Controller
                     $upc_code = UpcCode::where('upc_code', $item)->first();
 
                     if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()){
-                        // $image = Dropbox::files()->upload($path = '', $storagePath);
-                        // $decodedImage = json_decode($image,true);
-                        // $imagePath = $decodedImage['path_display'];
+                        $image = Dropbox::files()->upload($path = '', $storagePath);
+                        $decodedImage = json_decode($image,true);
+                        $imagePath = $decodedImage['path_display'];
 
-                        // $token = DB::table('dropbox_tokens')->first();
+                        $token = DB::table('dropbox_tokens')->first();
 
-                        // $adapter = \Storage::disk('dropbox')->getAdapter();
-                        // $client = $adapter->getClient();
-                        // $client->setAccessToken($token->access_token);
+                        $adapter = \Storage::disk('dropbox')->getAdapter();
+                        $client = $adapter->getClient();
+                        $client->setAccessToken($token->access_token);
 
-                        // $link = $client->createSharedLinkWithSettings($imagePath);
-                        // $decodedImage = json_decode($image,true);
+                        $link = $client->createSharedLinkWithSettings($imagePath);
+                        $decodedImage = json_decode($image,true);
                         $newItem = new ScannedItem();
                         $newItem->item = null;
                         $newItem->upc_code = $item;
