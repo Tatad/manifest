@@ -119,7 +119,8 @@
         </template>
 
         <template #item-image_name="item">
-          <img :src="item.image_name" class="object-fit: contain;" @click.prevent="enlargeImage(item)">
+          <img v-if="item.image_name" :src="item.image_name" class="object-fit: contain;" @click.prevent="enlargeImage(item)">
+          <span v-else>N/A</span>
         </template>
 
         <template #item-action="item">
