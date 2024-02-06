@@ -77,7 +77,7 @@ class ScannerController extends Controller
                     $scannedItem = ScannedItem::where('upc_code', $item)->first();
                     $upc_code = UpcCode::where('upc_code', $item)->first();
 
-                    if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()){
+                    if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()) {
                         $image = Dropbox::files()->upload($path = '', $storagePath);
                         $decodedImage = json_decode($image,true);
                         $imagePath = $decodedImage['path_display'];
@@ -93,7 +93,7 @@ class ScannerController extends Controller
                         $newItem = new ScannedItem();
                         $newItem->item = null;
                         $newItem->upc_code = $item;
-                        //$newItem->image_name = $link['url'].'&raw=1';
+                        $newItem->image_name = $link['url'].'&raw=1';
                         $newItem->save();
                         return Inertia::render('Scanner',['message' => 'UPC code successfully added.', 'status' => 'success']);
                     } else {
