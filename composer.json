@@ -7,13 +7,16 @@
     "require": {
         "php": "^8.1",
         "barryvdh/laravel-dompdf": "^2.0",
+        "dcblogdev/laravel-dropbox": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^0.6.8",
+        "intervention/image": "^3.2",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.8",
         "maatwebsite/excel": "^3.1",
         "smalot/pdfparser": "^2.7",
+        "spatie/flysystem-dropbox": "^3.0",
         "spatie/pdf-to-text": "^1.52",
         "tightenco/ziggy": "^1.0",
         "webscraperio/api-client-php": "^1.4"

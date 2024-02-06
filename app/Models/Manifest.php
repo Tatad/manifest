@@ -30,4 +30,13 @@ class Manifest extends Model
         'upc_code'
     ];
 
+    public function upc()
+    {
+        return $this->belongsTo(UpcCode::class, 'item', 'item');
+    }
+
+    public function palletItems()
+    {
+        return $this->belongsTo(PalletItem::class, 'item', 'item_number');
+    }
 }

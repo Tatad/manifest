@@ -88,9 +88,13 @@ Route::post('/barcode_qr_reader/upload', 'App\Http\Controllers\ImageUploadContro
 
 Route::get('/scanner', 'App\Http\Controllers\ScannerController@index')->name('scanner');
 Route::get('/lookup', 'App\Http\Controllers\ScannerController@lookup')->name('lookup');
+Route::get('/upc-lookup', 'App\Http\Controllers\ScannerController@UpcLookup')->name('UpcLookup');
 Route::post('/lookupItem', 'App\Http\Controllers\ScannerController@lookupItem')->name('lookupItem');
 Route::get('/scanned-list', 'App\Http\Controllers\ScannerController@scannedList')->name('scannedList');
 Route::post('/scan', 'App\Http\Controllers\ScannerController@scan')->name('scan');
 Route::post('/add-item-number', 'App\Http\Controllers\ScannerController@addItemNumber')->name('addItemNumber');
+Route::post('/add-item', 'App\Http\Controllers\ScannerController@addItem')->name('addItem');
+Route::post('/scan-upc-code', 'App\Http\Controllers\ScannerController@scanUpcCode')->name('scanUpcCode');
+Route::post('/lookup-upc-code', 'App\Http\Controllers\ScannerController@lookupUpcCode')->name('lookupUpcCode');
 
 require __DIR__.'/auth.php';

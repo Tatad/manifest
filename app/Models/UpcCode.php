@@ -17,4 +17,9 @@ class UpcCode extends Model
         'item', 
         'upc_code'
     ];
+
+    public function manifest()
+    {
+        return $this->belongsTo(Manifest::class, 'item', 'item');
+    }
 }

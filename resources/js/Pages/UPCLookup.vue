@@ -115,7 +115,7 @@
     });
   }
 
-  const selected = ref('item')
+  const selected = ref('upc')
 </script>
 
 <template>
@@ -259,6 +259,7 @@
               class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
               placeholder="Item Description" required
           />
+          <InputError class="mt-2" :message="form.errors.description" />
         </div>
 
         <div class="mt-2">
@@ -267,10 +268,10 @@
               id="item"
               v-model="itemInfo.item"
               type="number"
+              class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
               maxlength="8"
               oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-              class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4 bg-gray-200"
-              placeholder="Item Number" :readonly="selected == 'item'"
+              placeholder="Item Number" :readonly="selected == 'item'" required
           />
         </div>
 
@@ -280,8 +281,8 @@
               id="item"
               v-model="itemInfo.upc_code"
               type="number"
-              class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-              placeholder="Item UPC Code" :readonly="selected == 'upc'" required
+              class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4 bg-gray-200"
+              placeholder="Item UPC Code" :readonly="selected == 'upc'"
           />
         </div>
 
