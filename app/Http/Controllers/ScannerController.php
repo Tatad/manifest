@@ -45,8 +45,7 @@ class ScannerController extends Controller
             foreach($result as $data){
                 $code = explode(":", $data);
                 if($code[0] == "UPC-A"){
-                    //$code = ltrim(substr($data, strpos($data, ":") + 1),'0');
-                    $code = $data;
+                    $code = substr($data, strpos($data, ":") + 1);
                 }
             }
         }
@@ -71,13 +70,12 @@ class ScannerController extends Controller
             foreach($result as $data){
                 $code = explode(":", $data);
                 if($code[0] == "UPC-A"){
-                    //$item = ltrim(substr($data, strpos($data, ":") + 1),'0');
-                    $item = $data;
+                    $item = substr($data, strpos($data, ":") + 1);
                     
                     $scannedItem = ScannedItem::where('upc_code', $item)->first();
                     $upc_code = UpcCode::where('upc_code', $item)->first();
 
-                    if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()) {
+                    if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()){
                         $image = Dropbox::files()->upload($path = '', $storagePath);
                         $decodedImage = json_decode($image,true);
                         $imagePath = $decodedImage['path_display'];
