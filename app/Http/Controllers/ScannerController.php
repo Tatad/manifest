@@ -45,7 +45,8 @@ class ScannerController extends Controller
             foreach($result as $data){
                 $code = explode(":", $data);
                 if($code[0] == "UPC-A"){
-                    $code = ltrim(substr($data, strpos($data, ":") + 1),'0');
+                    //$code = ltrim(substr($data, strpos($data, ":") + 1),'0');
+                    $code = $data;
                 }
             }
         }
@@ -70,7 +71,8 @@ class ScannerController extends Controller
             foreach($result as $data){
                 $code = explode(":", $data);
                 if($code[0] == "UPC-A"){
-                    $item = ltrim(substr($data, strpos($data, ":") + 1),'0');
+                    //$item = ltrim(substr($data, strpos($data, ":") + 1),'0');
+                    $item = $data;
                     
                     $scannedItem = ScannedItem::where('upc_code', $item)->first();
                     $upc_code = UpcCode::where('upc_code', $item)->first();
