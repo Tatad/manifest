@@ -17,24 +17,27 @@
 
   const submit = () => {
     if (form.image) {
-      form.post(route('scan'), {
-          preserveScroll: true,
-          preserveState: true,
-          onSuccess: (response) => {
-              console.log(response.props.message)
-              form.reset()
-              form.get(route('scanner'), {
-                  preserveScroll: true,
-                  preserveState: true,
-                  onSuccess: () => {
-                      form.image = ''
-                      toaster.info(response.props.message, {
-                        position: "top-right",
-                      });
-                  }
-              });
-          }
-      });
+      // form.post(route('scan'), {
+      //     preserveScroll: true,
+      //     preserveState: true,
+      //     onSuccess: (response) => {
+      //         console.log(response.props.message)
+      //         form.reset()
+      //         form.get(route('scanner'), {
+      //             preserveScroll: true,
+      //             preserveState: true,
+      //             onSuccess: () => {
+      //                 form.image = ''
+      //                 toaster.info(response.props.message, {
+      //                   position: "top-right",
+      //                 });
+      //             }
+      //         });
+      //     }
+      // });
+      axios.post('/scan',form).then((response) => {
+        console.log(response.data);
+      })
     }
   }
 
