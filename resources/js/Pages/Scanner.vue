@@ -45,7 +45,7 @@
     //     }
     //   })
     // })
-
+      alert();
     let formData = new FormData();
     formData.append('image', image.value);
     axios.post('/scan', formData, {
