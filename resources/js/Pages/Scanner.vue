@@ -14,7 +14,7 @@
   const image = ref(null)
 
   let onChange = (event) => {
-      form.image = event.target.files ? event.target.files[0] : null;
+      image.value = event.target.files ? event.target.files[0] : null;
       console.log(image.value)
   }
 
@@ -38,13 +38,22 @@
       //         });
       //     }
       // });
-    return new Promise((res, rej) => {
-      form.post(route('scan'), {
-        onSuccess: (response) => {
-            console.log(response)
+    // return new Promise((res, rej) => {
+    //   form.post(route('scan'), {
+    //     onSuccess: (response) => {
+    //         console.log(response)
+    //     }
+    //   })
+    // })
+
+    let formData = new FormData();
+    formData.append('image', image.value);
+    axios.post('/scan', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': 'Bearer {{ auth()->user()->api_token }}',
         }
-      })
-    })
+    }).then( response => console.log(response))
     //}
   }
 
