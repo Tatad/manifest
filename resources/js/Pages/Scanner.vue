@@ -8,15 +8,18 @@
   import { createToaster } from "@meforma/vue-toaster";
 
   const form = useForm({
-    image: ''
+    image: {}
   });
+
+  const image = ref(null)
 
   let onChange = (event) => {
       form.image = event.target.files ? event.target.files[0] : null;
+      console.log(image.value)
   }
 
   const submit = () => {
-    if (form.image) {
+    //if (form.image) {
       // form.post(route('scan'), {
       //     preserveScroll: true,
       //     preserveState: true,
@@ -35,10 +38,14 @@
       //         });
       //     }
       // });
-      axios.post('/scan',form).then((response) => {
-        console.log(response.data);
+    return new Promise((res, rej) => {
+      form.post(route('scan'), {
+        onSuccess: (response) => {
+            console.log(response)
+        }
       })
-    }
+    })
+    //}
   }
 
   const toaster = createToaster({ /* options */ });
@@ -56,9 +63,9 @@
       <span class="tag">
         <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"></label> -->
         <div>
-          <form enctype="multipart/form-data">
+          <form enctype="multipart/form-data" @submit.prevent="submit">
           <input type="file" @change="onChange">
-          <PrimaryButton class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
+          <input type="submit">
         </form>
   <!-- <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange"> -->
   
