@@ -50,8 +50,7 @@
     formData.append('image', image.value);
     axios.post('/scan', formData, {
         headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': 'Bearer {{ auth()->user()->api_token }}',
+            'Content-Type': 'multipart/form-data'
         }
     }).then( response => console.log(response))
     //}
