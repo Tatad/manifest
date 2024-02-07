@@ -84,7 +84,7 @@
 
   const submit = () => {
     console.log(form)
-    form.post(route('addItem'), {
+    form.post(route('addItemViaScannedList'), {
         onSuccess: () => {
           form.reset()
           openEnlargeImageModal.value = false;

@@ -39,7 +39,7 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-        exec('zbarimg -S enable '.$storagePath, $result);
+        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
 
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
@@ -65,7 +65,7 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-        exec('zbarimg -S enable '.$storagePath, $result);
+        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
                 $code = explode(":", $data);
@@ -158,14 +158,85 @@ class ScannerController extends Controller
 
     public function lookupItem(Request $request){
         $input = $request->all();
-        $item = Manifest::where('item', $input['item'])->first();
-
+        $item = Manifest::with('upc')->where('item', $input['item'])->first();
+        if(collect($item)->isNotEmpty()){
+            $item['upc_code'] = $item['upc']['upc_code'];
+            $item['item'] = $input['item'];
+            $item['isEmpty'] = 0;
+        }else{
+            $item = $input;
+            $item['isEmpty'] = 1;
+        }
         return Inertia::render('Lookup', [
             'data' => $item
         ]); 
     }
 
-    public function addItem(Request $request): RedirectResponse
+    public function addItemViaScannedList(Request $request){
+        $request->validate([
+            'item' => 'required|integer|min:8',
+            'upc_code' => 'required'
+        ]);
+
+        $input = $request->all();
+        
+        $manifestCheck = Manifest::where('item', $input['item'])->first();
+
+        if(collect($manifestCheck)->isEmpty()){
+            $manifest = new Manifest();
+            $manifest->item = $input['item'];
+            $manifest->description = $input['description'];
+            $manifest->item_name = $input['description'];
+            $manifest->quantity = 1;
+            $manifest->msrp = $input['msrp'];
+            $manifest->retail_price = $input['retail_price'];
+            $manifest->total = $input['msrp'];
+            $manifest->quantity = 1;
+            $manifest->type = $input['type'];
+
+            $manifest->save();
+
+            $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
+            if(collect($upcCodeCheck)->isEmpty()){
+                $upc_code = new UpcCode();
+                $upc_code->item = $input['item'];
+                $upc_code->upc_code = $input['upc_code'];
+                $upc_code->save();
+            }else{
+                $upcCodeCheck->item = $input['item'];
+                $upcCodeCheck->upc_code = $input['upc_code'];
+                $upcCodeCheck->save();
+            }
+        }else{
+            $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
+            if(collect($upcCodeCheck)->isEmpty()){
+                $upc_code = new UpcCode();
+                $upc_code->item = $input['item'];
+                $upc_code->upc_code = $input['upc_code'];
+                $upc_code->save();
+            }else{
+                $upcCodeCheck->item = $input['item'];
+                $upcCodeCheck->upc_code = $input['upc_code'];
+                $upcCodeCheck->save();
+            }
+
+            $manifestCheck->item = $input['item'];
+            $manifestCheck->description = $input['description'];
+            $manifestCheck->item_name = $input['description'];
+            $manifestCheck->quantity = 1;
+            $manifestCheck->msrp = $input['msrp'];
+            $manifestCheck->retail_price = $input['retail_price'];
+            $manifestCheck->total = $input['msrp'];
+            $manifestCheck->quantity = 1;
+            $manifestCheck->type = $input['type'];
+            $manifestCheck->save();
+        }
+
+         $scannedItem = ScannedItem::where('upc_code', $input['upc_code'])->delete();
+        return Inertia::render('ScannedList'); 
+    }
+
+    public function addItem(Request $request)
     {
         $request->validate([
             'item' => 'required|integer|min:8',
@@ -174,9 +245,9 @@ class ScannerController extends Controller
             'retail_price' => 'required'
         ]);
         $input = $request->all();
-        //dd($input['item']);
+        
         $manifestCheck = Manifest::where('item', $input['item'])->first();
-        //dd($input);
+
         if(collect($manifestCheck)->isEmpty()){
             $manifest = new Manifest();
             $manifest->item = $input['item'];
@@ -253,10 +324,18 @@ class ScannerController extends Controller
 
         $scannedItem = ScannedItem::where('upc_code', $input['upc_code'])->delete();
 
-        $lists = ScannedItem::all();
+        // $lists = ScannedItem::all();
 
-        return Inertia::render('ScannedList', [
-            'list'  => $lists
-        ]); 
+        // return Inertia::render('ScannedList', [
+        //     'list'  => $lists
+        // ]); 
+
+        if($input['scanMethod'] == 'item'){
+            return Inertia::render('Lookup'); 
+        }
+
+        if($input['scanMethod'] == 'upc'){
+            return Inertia::render('UPCLookup'); 
+        }
     }
 }
