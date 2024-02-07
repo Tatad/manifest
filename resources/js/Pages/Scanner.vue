@@ -12,6 +12,7 @@
   });
 
   let onChange = (event) => {
+    alert((event.target.files[0]))
       form.image = event.target.files ? event.target.files[0] : null;
   }
 
