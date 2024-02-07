@@ -55,8 +55,7 @@
         <div class="grid grid-cols-2 gap-1">
           <input type="file" @change="onChange" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
   <!-- <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange"> -->
-  <label for="myfileid" class="icon pl-4 dark:text-white">
-              
+  
           </div>
 
         <PrimaryButton class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
