@@ -15,20 +15,25 @@
 
   const props = defineProps({
     list: {
-        type: Array,
+      type: Array,
+    },
+    data: {
+      type: Object,
     }
   });
 
+  const itemInfoData = ref(props.data);
+
   const form = useForm({
     id: 0,
-    item: 0,
+    item: '',
     upc_code: '',
     description: '',
     isEmpty: 0,
     image: '',
     type: '',
-    msrp: 0,
-    retail_price: 0
+    msrp: '',
+    retail_price: ''
   });
 
   const itemInfo = ref([])
@@ -63,41 +68,85 @@
 
   const lookUpItem = () => {
     buttonDisabled.value = true;
-    axios.post('/add-item-number', form).then((response) => {
-      console.log(response.data)
-        buttonDisabled.value = false;
-        form.description = response.data.description
-        form.msrp = (response.data.msrp) ? response.data.msrp : 0
-        form.retail_price = (response.data.retail_price) ? response.data.retail_price : 0
-        form.item = response.data.item
-        form.isEmpty = response.data.isEmpty
-        itemInfo.value = response.data
-        form.get(route('scannedList'), {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
+    // axios.post('/add-item-number', form).then((response) => {
+    //   console.log(response.data)
+    //     buttonDisabled.value = false;
+    //     form.description = response.data.description
+    //     form.msrp = (response.data.msrp) ? response.data.msrp : 0
+    //     form.retail_price = (response.data.retail_price) ? response.data.retail_price : 0
+    //     form.item = response.data.item
+    //     form.isEmpty = response.data.isEmpty
+    //     itemInfo.value = response.data
+    //     form.get(route('scannedList'), {
+    //         preserveScroll: true,
+    //         preserveState: true,
+    //         onSuccess: () => {
 
-            }
-        });
+    //         }
+    //     });
+    // });
+    buttonDisabled.value = true;
+    form.post(route('addItemNumber'), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: (response) => {
+          console.log(response.props.data);
+          buttonDisabled.value = false;
+          form.description = response.props.data.description
+          form.msrp = (response.props.data.msrp) ? response.props.data.msrp : 0
+          form.retail_price = (response.props.data.retail_price) ? response.props.data.retail_price : 0
+          form.item = response.props.data.item
+          form.isEmpty = response.props.data.isEmpty
+          itemInfo.value = response.props.data
+        }
     });
   }
 
   const submit = () => {
     console.log(form)
     form.post(route('addItemViaScannedList'), {
+        preserveScroll: true,
+        preserveState: true,
         onSuccess: () => {
-          form.reset()
           openEnlargeImageModal.value = false;
           itemNumberModal.value = false;
-          itemInfo.value = []
+          form.get(route('scannedList'), {
+            onSuccess: () => {
+              itemInfo.value = [];
+              form.reset();
+              form.item = '';
+              form.description = '';
+              form.msrp = '';
+              form.retail_price = '';
+              form.image = '';
+              form.type = '';
+              form.upc_code = '';
+              form.image = '';
+              openEnlargeImageModal.value = false;
+              itemNumberModal.value = false;
+            }
+          });
         }
     });
   }
 
   const closeModal = () => {
-    itemInfo.value = [];
-    openEnlargeImageModal.value = false;
-    itemNumberModal.value = false;
+    form.get(route('scannedList'), {
+      onSuccess: () => {
+        itemInfo.value = [];
+        form.reset();
+        form.item = '';
+        form.description = '';
+        form.msrp = '';
+        form.retail_price = '';
+        form.image = '';
+        form.type = '';
+        form.upc_code = '';
+        form.image = '';
+        openEnlargeImageModal.value = false;
+        itemNumberModal.value = false;
+      }
+    });
   };
 </script>
 
@@ -141,11 +190,10 @@
       </Modal>
 
       <Modal :show="itemNumberModal == true" @close="closeModal">
-          
           <div class="p-6">
               <div class="mt-6">
                   <div v-if="itemInfo.length == 0">
-                    <InputLabel for="item" value="Item Number"/>
+                    <InputLabel class="dark:text-black" for="item" value="Item Number"/>
                     <TextInput
                         id="item"
                         v-model="form.item"
@@ -155,97 +203,34 @@
                     />
                     <InputError :message="form.errors.item" class="mt-2" />
                   </div>
-                  <!-- for scraping bee section -->
-                  <div v-if="itemInfo.scrapingbee == 1">
-                    <h2 class="text-2xl font-extrabold dark:text-white">Is this the item you are looking for?</h2>
-                    <div class="mt-2">
-                      <InputLabel for="item" value="UPC Code"/>
-                      <TextInput
-                          id="item"
-                          v-model="form.upc_code"
-                          type="number"
-                          class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="UPC Code"
-                      />
-                    </div>
-                    <div class="mt-2">
-                      <InputLabel for="item" value="Item Description"/>
-                      <TextInput
-                          id="item"
-                          v-model="form.description"
-                          type="text"
-                          class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="Item Description"
-                      />
-                    </div>
-                    <div class="mt-2">
-                      <InputLabel for="item" value="Item Number"/>
-                      <TextInput
-                          id="item"
-                          v-model="form.item"
-                          type="number"
-                          class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="Item Number"
-                      />
-                    </div>
-
-                    <div class="mt-2">
-                      <InputLabel for="item" value="Item MSRP"/>
-                      <TextInput
-                          id="item"
-                          v-model="form.msrp"
-                          type="number"
-                          class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="Item Number" readonly
-                      />
-                    </div>
-
-                    <div class="mt-2">
-                      <InputLabel for="item" value="Item Retail Price"/>
-                      <TextInput
-                          id="item"
-                          v-model="form.retail_price"
-                          type="number"
-                          class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="Item  Retail Price"
-                      />
-                    </div>
-
-                    <!-- <img class="mt-2 object-cover w-96" src="https://images.costco-static.com//ImageDelivery//imageService?profileId=12026539&itemId=100979403-894&recipeName=680" alt="image description"> -->
-                    <img v-if="itemInfo.images.src" :src="itemInfo.images.src">
-
-
-                    <h4 class="mt-2">Features</h4>
-                     <div v-html="itemInfo.features"></div>
-                  </div>
 
                   <div v-if="itemInfo.scrapingbee == 0">
-                    <h2 class="text-2xl font-extrabold dark:text-white">Is this the item you are looking for?</h2>
+                    <h2 class="text-2xl font-extrabold dark:text-black">Is this the item you are looking for?</h2>
                     <div class="mt-2">
-                      <InputLabel for="item" value="UPC Code"/>
+                      <InputLabel class="dark:text-black" for="item" value="UPC Code"/>
                       <TextInput
                           id="item"
                           v-model="form.upc_code"
                           type="number"
                           class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="UPC Code"
+                          placeholder="UPC Code" readonly
                       />
                     </div>
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Description"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item Description"/>
                       <TextInput
                           id="item"
-                          v-model="form.description"
+                          v-model="itemInfo.description"
                           type="text"
                           class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                           placeholder="Item Description" readonly
                       />
                     </div>
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Number"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item Number"/>
                       <TextInput
                           id="item"
-                          v-model="form.item"
+                          v-model="itemInfo.item"
                           type="number"
                           class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                           placeholder="Item Number" readonly
@@ -253,10 +238,10 @@
                     </div>
 
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item MSRP"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item MSRP"/>
                       <TextInput
                           id="item"
-                          v-model="form.msrp"
+                          v-model="itemInfo.msrp"
                           type="number"
                           class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
                           placeholder="Item Number" readonly
@@ -264,13 +249,24 @@
                     </div>
 
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Retail Price"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item Retail Price"/>
                       <TextInput
                           id="item"
-                          v-model="form.retail_price"
+                          v-model="itemInfo.retail_price"
                           type="number"
                           class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
-                          placeholder="Item  Retail Price"
+                          placeholder="Item  Retail Price" readonly
+                      />
+                    </div>
+
+                    <div class="mt-2">
+                      <InputLabel class="dark:text-black" for="item" value="Item Type"/>
+                      <TextInput
+                          id="item"
+                          v-model="itemInfo.type"
+                          type="text"
+                          class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
+                          placeholder="Item Type" readonly
                       />
                     </div>
 
@@ -281,9 +277,9 @@
                     
                   </div>
                   <div v-if="itemInfo.isEmpty  == 1">
-                    <h2 class="text-2xl font-extrabold dark:text-white">Item not found. Please enter the details below.</h2>
+                    <h2 class="text-2xl font-extrabold dark:text-black">Item not found. Please enter the details below.</h2>
                     <div class="mt-2">
-                      <InputLabel for="item" value="UPC Code"/>
+                      <InputLabel class="dark:text-black" for="item" value="UPC Code"/>
                       <TextInput
                           id="item"
                           v-model="form.upc_code"
@@ -293,7 +289,7 @@
                       />
                     </div>
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Description"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item Description"/>
                       <TextInput
                           id="item"
                           v-model="form.description"
@@ -303,7 +299,7 @@
                       />
                     </div>
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Number"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item Number"/>
                       <TextInput
                           id="item"
                           v-model="form.item"
@@ -314,7 +310,7 @@
                     </div>
 
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item MSRP"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item MSRP"/>
                       <TextInput
                           id="item"
                           v-model="form.msrp"
@@ -325,7 +321,7 @@
                     </div>
 
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Retail Price"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item Retail Price"/>
                       <TextInput
                           id="item"
                           v-model="form.retail_price"
@@ -336,14 +332,14 @@
                     </div>
 
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item Image"/>
-                      <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange">
+                      <InputLabel class="dark:text-black" for="item" value="Item Image"/>
+                      <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 w-3/4" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange">
                     </div>
 
                     <div class="mt-2">
-                      <InputLabel for="item" value="Item type"/>
+                      <InputLabel class="dark:text-black" for="item" value="Item type"/>
                       <select
-                        class="favouriteSport-selector"
+                        class="w-3/4"
                         v-model="form.type"
                         name="type"
                       >

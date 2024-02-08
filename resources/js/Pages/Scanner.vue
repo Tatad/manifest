@@ -14,30 +14,29 @@
   const image = ref(null)
 
   let onChange = (event) => {
-      image.value = event.target.files ? event.target.files[0] : null;
-      console.log(image.value)
+      form.image = event.target.files ? event.target.files[0] : null;
   }
 
   const submit = () => {
-    //if (form.image) {
-      // form.post(route('scan'), {
-      //     preserveScroll: true,
-      //     preserveState: true,
-      //     onSuccess: (response) => {
-      //         console.log(response.props.message)
-      //         form.reset()
-      //         form.get(route('scanner'), {
-      //             preserveScroll: true,
-      //             preserveState: true,
-      //             onSuccess: () => {
-      //                 form.image = ''
-      //                 toaster.info(response.props.message, {
-      //                   position: "top-right",
-      //                 });
-      //             }
-      //         });
-      //     }
-      // });
+    if (form.image) {
+      form.post(route('scan'), {
+          preserveScroll: true,
+          preserveState: true,
+          onSuccess: (response) => {
+              console.log(response.props.message)
+              form.reset()
+              form.get(route('scanner'), {
+                  preserveScroll: true,
+                  preserveState: true,
+                  onSuccess: () => {
+                      form.image = ''
+                      toaster.info(response.props.message, {
+                        position: "top-right",
+                      });
+                  }
+              });
+          }
+      });
     // return new Promise((res, rej) => {
     //   form.post(route('scan'), {
     //     onSuccess: (response) => {
@@ -45,15 +44,19 @@
     //     }
     //   })
     // })
-      alert();
-    let formData = new FormData();
-    formData.append('image', image.value);
-    axios.post('/scan', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        }
-    }).then( response => console.log(response))
-    //}
+    // let formData = new FormData();
+    // formData.append('image', image.value);
+    // axios.post('/scan', formData, {
+    //     headers: {
+    //         'Content-Type': 'multipart/form-data'
+    //     }
+    // }).then( (response) => {
+    //   console.log(response.data)
+    //   // toaster.info(response.props.message, {
+    //   //   position: "top-right",
+    //   // });
+    // })
+    }
   }
 
   const toaster = createToaster({ /* options */ });
@@ -71,9 +74,9 @@
       <span class="tag">
         <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"></label> -->
         <div>
-          <form enctype="multipart/form-data" @submit.prevent="submit">
-          <input type="file" @change="onChange">
-          <input type="submit">
+          <form enctype="multipart/form-data">
+          <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" type="file" capture="camera" @change="onChange">
+          <PrimaryButton class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
         </form>
   <!-- <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange"> -->
   

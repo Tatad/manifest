@@ -39,6 +39,7 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+        //exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
         exec('zbarimg -S enable '.$storagePath, $result);
 
         if(collect($result)->isNotEmpty()){
@@ -55,9 +56,7 @@ class ScannerController extends Controller
 
     public function scan(Request $request){
         $input = $request->all();
-        //dd($input);
-        //$picture = $request->file('image');
-        
+
         $file = new Filesystem;
         $storagePathToClear = storage_path('app/images/');
         $file->cleanDirectory($storagePathToClear);
@@ -67,7 +66,9 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+        //exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
         exec('zbarimg -S enable '.$storagePath, $result);
+        //dd($result);
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
                 $code = explode(":", $data);
@@ -115,6 +116,10 @@ class ScannerController extends Controller
     }
 
     public function addItemNumber(Request $request){
+        // $request->validate([
+        //     'item' => 'required|min:8'
+        // ]);
+
         $input = $request->all();
         $item = Manifest::with('palletItems')->where('item', $input['item'])->first();
 
@@ -126,7 +131,13 @@ class ScannerController extends Controller
             $item['isEmpty'] = 0;
             $item['scrapingbee'] = 0;
         }
-        return $item;
+        //return $item;
+        $lists = ScannedItem::all();
+
+        return Inertia::render('ScannedList', [
+            'data' => $item,
+            'list'  => $lists
+        ]); 
 
     }
 
@@ -161,14 +172,16 @@ class ScannerController extends Controller
     public function lookupItem(Request $request){
         $input = $request->all();
         $item = Manifest::with('upc')->where('item', $input['item'])->first();
+        
         if(collect($item)->isNotEmpty()){
-            $item['upc_code'] = $item['upc']['upc_code'];
+            $item['upc_code'] = isset($item['upc']['upc_code']) ? $item['upc']['upc_code'] : '';
             $item['item'] = $input['item'];
             $item['isEmpty'] = 0;
         }else{
             $item = $input;
             $item['isEmpty'] = 1;
         }
+        //dd($item);
         return Inertia::render('Lookup', [
             'data' => $item
         ]); 
@@ -176,12 +189,12 @@ class ScannerController extends Controller
 
     public function addItemViaScannedList(Request $request){
         $request->validate([
-            'item' => 'required|integer|min:8',
+            //'item' => 'required|integer|min:8',
             'upc_code' => 'required'
         ]);
 
         $input = $request->all();
-        
+
         $manifestCheck = Manifest::where('item', $input['item'])->first();
 
         if(collect($manifestCheck)->isEmpty()){
@@ -211,6 +224,7 @@ class ScannerController extends Controller
             }
         }else{
             $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
+            //dd($upcCodeCheck);
             if(collect($upcCodeCheck)->isEmpty()){
                 $upc_code = new UpcCode();
                 $upc_code->item = $input['item'];
@@ -222,20 +236,26 @@ class ScannerController extends Controller
                 $upcCodeCheck->save();
             }
 
-            $manifestCheck->item = $input['item'];
-            $manifestCheck->description = $input['description'];
-            $manifestCheck->item_name = $input['description'];
-            $manifestCheck->quantity = 1;
-            $manifestCheck->msrp = $input['msrp'];
-            $manifestCheck->retail_price = $input['retail_price'];
-            $manifestCheck->total = $input['msrp'];
-            $manifestCheck->quantity = 1;
-            $manifestCheck->type = $input['type'];
-            $manifestCheck->save();
+            // $manifestCheck->item = $input['item'];
+            // $manifestCheck->description = $input['description'];
+            // $manifestCheck->item_name = $input['description'];
+            // $manifestCheck->quantity = 1;
+            // $manifestCheck->msrp = $input['msrp'];
+            // $manifestCheck->retail_price = $input['retail_price'];
+            // $manifestCheck->total = $input['msrp'];
+            // $manifestCheck->quantity = 1;
+            // $manifestCheck->type = $input['type'];
+            // $manifestCheck->save();
         }
 
-         $scannedItem = ScannedItem::where('upc_code', $input['upc_code'])->delete();
-        return Inertia::render('ScannedList'); 
+        $scannedItem = ScannedItem::where('upc_code', $input['upc_code'])->delete();
+        //return Inertia::render('ScannedList'); 
+        $lists = ScannedItem::all();
+
+        return Inertia::render('ScannedList', [
+            'data' => [],
+            'list'  => $lists
+        ]); 
     }
 
     public function addItem(Request $request)
@@ -300,7 +320,8 @@ class ScannerController extends Controller
                 $upcCodeCheck->save();
             }
         }else{
-            $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
+            $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code']])->first();
+
             if(collect($upcCodeCheck)->isEmpty()){
                 $upc_code = new UpcCode();
                 $upc_code->item = $input['item'];
@@ -321,6 +342,31 @@ class ScannerController extends Controller
             $manifestCheck->total = $input['msrp'];
             $manifestCheck->quantity = 1;
             $manifestCheck->type = $input['type'];
+            if($input['image']){
+                $file = new Filesystem;
+                $storagePathToClear = storage_path('app/images/');
+                $file->cleanDirectory($storagePathToClear);
+
+                $imagePath = $request->file('image')->store('/images');
+                $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+                
+                $storagePath = storage_path('app/images/'.$filename);
+                $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+
+                $image = Dropbox::files()->upload($path = '', $storagePath);
+                $decodedImage = json_decode($image,true);
+                $imagePath = $decodedImage['path_display'];
+
+                $token = DB::table('dropbox_tokens')->first();
+
+                $adapter = \Storage::disk('dropbox')->getAdapter();
+                $client = $adapter->getClient();
+                $client->setAccessToken($token->access_token);
+
+                $link = $client->createSharedLinkWithSettings($imagePath);
+                
+                $manifestCheck->images = json_encode([$link['url'].'&raw=1']);
+            }
             $manifestCheck->save();
         }
 

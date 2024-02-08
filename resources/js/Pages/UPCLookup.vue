@@ -92,7 +92,15 @@
   const closeModal = () => {
     form.get(route('UpcLookup'), {
         onSuccess: () => {
-          form.upc_code = ''
+          form.reset();
+          form.item = '';
+          form.description = '';
+          form.msrp = '';
+          form.retail_price = '';
+          form.image = '';
+          form.type = '';
+          form.upc_code = '';
+          form.image = '';
           itemInfo.value = [];
           previewItemModal.value = false;
         }
@@ -105,16 +113,27 @@
     form.retail_price = itemInfo.value.retail_price;
     form.item = itemInfo.value.item;
     form.upc_code = itemInfo.value.upc_code
+    form.type = itemInfo.value.type
+    buttonDisabled.value = true;
     form.post(route('addItem'), {
         onSuccess: () => {
           form.reset()
-          itemInfo.value = []
+          itemInfo.value = [];
+          previewItemModal.value = false;
+          buttonDisabled.value = false;
+          toaster.info('Item saved successfully.', {
+            position: "top-right",
+          });
         }
     });
   }
 
   const selected = ref('upc')
   const screenWidth = ref(screen.width)
+
+  let onImageChange = (event) => {
+    form.image = event.target.files ? event.target.files[0] : null;
+  }
 
 </script>
 
@@ -239,6 +258,17 @@
                   />
                 </div>
 
+                <div class="mt-2">
+                  <InputLabel for="item" value="Item Type"/>
+                  <TextInput
+                      id="item"
+                      v-model="itemInfo.type"
+                      type="text"
+                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
+                      placeholder="Item Type" readonly
+                  />
+                </div>
+
                 <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
                   <InputLabel for="item" value="Item image"/>
                   <img :src="image"  class="pt-6 object-cover w-52">
@@ -253,7 +283,13 @@
       </Modal>
 
       <div class="mt-6 border-2 pl-5 pt-6" v-if="itemInfo && itemInfo.confirmed == true">
+        <div v-if="buttonDisabled == false" class="dark:text-white float-right pr-5" @click.prevent="itemInfo = [];form.upc_code = ''">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
 
+        </div>
+        <div class="clear-both pt-5"></div>
         <h2 class="text-2xl pb-3 font-extrabold dark:text-white" v-if="itemInfo.isEmpty == 1">Item not found. Please enter the details below.</h2>
         <div class="mt-2">
           <InputLabel for="item" value="Item Description"/>
@@ -314,8 +350,24 @@
         </div>
 
         <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
-          <InputLabel for="item" value="Item image"/>
           <img :src="image"  class="pt-6 object-cover w-52">
+        </div>
+
+        <div class="mt-2">
+          <InputLabel for="item" value="Item Image"/>
+          <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 w-3/4" id="file_input" type="file"  accept="image/*" capture="camera" @change="onImageChange">
+        </div>
+
+        <div class="mt-2">
+          <InputLabel for="item" value="Item type"/>
+          <select
+            class="w-3/4"
+            v-model="itemInfo.type"
+            name="type"
+          >
+            <option value="Clothing">Clothing</option>
+            <option value="Mixed">Mixed</option>
+          </select>
         </div>
 
         <div class="mt-6 mb-6 flex justify-end">

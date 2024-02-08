@@ -75,9 +75,18 @@
   const closeModal = () => {
     form.get(route('lookup'), {
         onSuccess: () => {
-          form.upc_code = ''
+          form.reset();
+          form.item = '';
+          form.description = '';
+          form.msrp = '';
+          form.retail_price = '';
+          form.image = '';
+          form.type = '';
+          form.upc_code = '';
+          form.image = '';
           itemInfo.value = [];
           previewItemModal.value = false;
+          buttonDisabled.value = false;
         }
     });
   };
@@ -88,6 +97,9 @@
     form.retail_price = itemInfo.value.retail_price;
     form.item = itemInfo.value.item;
     form.upc_code = itemInfo.value.upc_code
+    form.type = itemInfo.value.type
+    buttonDisabled.value = true;
+    //form.image = itemInfo.value.images
     form.post(route('addItem'), {
         onSuccess: () => {
           form.get(route('lookup'), {
@@ -95,7 +107,8 @@
               form.upc_code = ''
               itemInfo.value = [];
               previewItemModal.value = false;
-              toaster.info('Item successfully added', {
+              buttonDisabled.value = false;
+              toaster.info('Item saved successfully.', {
                 position: "top-right",
               });
             }
@@ -195,6 +208,17 @@
                   />
                 </div>
 
+                <div class="mt-2">
+                  <InputLabel for="item" value="Item Type"/>
+                  <TextInput
+                      id="item"
+                      v-model="itemInfo.type"
+                      type="text"
+                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4"
+                      placeholder="Item Type" readonly
+                  />
+                </div>
+
                 <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
                   <InputLabel for="item" value="Item image"/>
                   <img :src="image"  class="pt-6 object-cover w-52">
@@ -209,7 +233,7 @@
       </Modal>
 
       <div class="mt-6 border-2 pl-5 pt-6" v-if="itemInfo && itemInfo.confirmed == true">
-        <div class="dark:text-white float-right pr-5" @click.prevent="itemInfo = [];form.item = ''">
+        <div v-if="buttonDisabled == false" class="dark:text-white float-right pr-5" @click.prevent="itemInfo = [];form.item = ''">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
@@ -277,13 +301,24 @@
         </div>
 
         <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
-          <InputLabel for="item" value="Item image"/>
           <img :src="image"  class="pt-6 object-cover w-52">
         </div>
 
-        <div class="mt-2" v-else>
+        <div class="mt-2">
           <InputLabel for="item" value="Item Image"/>
-          <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange">
+          <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 w-3/4" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange">
+        </div>
+
+        <div class="mt-2">
+          <InputLabel for="item" value="Item type"/>
+          <select
+            class="w-3/4"
+            v-model="itemInfo.type"
+            name="type"
+          >
+            <option value="Clothing">Clothing</option>
+            <option value="Mixed">Mixed</option>
+          </select>
         </div>
 
         <div class="mt-6 mb-6 flex justify-end">
