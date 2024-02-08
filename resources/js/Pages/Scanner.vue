@@ -14,29 +14,29 @@
   const image = ref(null)
 
   let onChange = (event) => {
-      form.image = event.target.files ? event.target.files[0] : null;
+      image.value = event.target.files ? event.target.files[0] : null;
   }
 
   const submit = () => {
-    if (form.image) {
-      form.post(route('scan'), {
-          preserveScroll: true,
-          preserveState: true,
-          onSuccess: (response) => {
-              console.log(response.props.message)
-              form.reset()
-              form.get(route('scanner'), {
-                  preserveScroll: true,
-                  preserveState: true,
-                  onSuccess: () => {
-                      form.image = ''
-                      toaster.info(response.props.message, {
-                        position: "top-right",
-                      });
-                  }
-              });
-          }
-      });
+    // if (form.image) {
+    //   form.post(route('scan'), {
+    //       preserveScroll: true,
+    //       preserveState: true,
+    //       onSuccess: (response) => {
+    //           console.log(response.props.message)
+    //           form.reset()
+    //           form.get(route('scanner'), {
+    //               preserveScroll: true,
+    //               preserveState: true,
+    //               onSuccess: () => {
+    //                   form.image = ''
+    //                   toaster.info(response.props.message, {
+    //                     position: "top-right",
+    //                   });
+    //               }
+    //           });
+    //       }
+    //   });
     // return new Promise((res, rej) => {
     //   form.post(route('scan'), {
     //     onSuccess: (response) => {
@@ -44,19 +44,19 @@
     //     }
     //   })
     // })
-    // let formData = new FormData();
-    // formData.append('image', image.value);
-    // axios.post('/scan', formData, {
-    //     headers: {
-    //         'Content-Type': 'multipart/form-data'
-    //     }
-    // }).then( (response) => {
-    //   console.log(response.data)
-    //   // toaster.info(response.props.message, {
-    //   //   position: "top-right",
-    //   // });
-    // })
-    }
+    let formData = new FormData();
+    formData.append('image', image.value);
+    axios.post('/scan', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    }).then( (response) => {
+      alert('success');
+      // toaster.info(response.props.message, {
+      //   position: "top-right",
+      // });
+    })
+    //}
   }
 
   const toaster = createToaster({ /* options */ });
