@@ -51,7 +51,7 @@
             'Content-Type': 'multipart/form-data'
         }
     }).then( (response) => {
-      alert('success');
+      alert(response.data);
       // toaster.info(response.props.message, {
       //   position: "top-right",
       // });
