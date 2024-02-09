@@ -47,6 +47,8 @@ class ScannerController extends Controller
                 $code = explode(":", $data);
                 if($code[0] == "UPC-A"){
                     $code = substr($data, strpos($data, ":") + 1);
+                }elseif($code[0] == "EAN-13"){
+                    $code = substr($data, strpos($data, ":") + 1);
                 }
             }
         }

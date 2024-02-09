@@ -201,10 +201,10 @@
       <!--preview item modal-->
       <Modal :show="previewItemModal" @close="closeModal">
           <div class="p-6" v-if="itemInfo">
-            <h2 class="text-2xl font-extrabold dark:text-white">Is this the item you are looking for?</h2>
+            <h2 class="text-2xl font-extrabold dark:text-black">Is this the item you are looking for?</h2>
             <div class="mt-6">
                <div class="mt-2">
-                  <InputLabel for="item" value="Item Description"/>
+                  <InputLabel class="dark:text-black" for="item" value="Item Description"/>
                   <TextInput
                       id="item"
                       v-model="itemInfo.description"
@@ -215,7 +215,7 @@
                 </div>
 
                 <div class="mt-2">
-                  <InputLabel for="item" value="Item Number"/>
+                  <InputLabel class="dark:text-black" for="item" value="Item Number"/>
                   <TextInput
                       id="item"
                       v-model="itemInfo.item"
@@ -226,7 +226,7 @@
                 </div>
 
                 <div class="mt-2">
-                  <InputLabel for="item" value="Item UPC Code"/>
+                  <InputLabel class="dark:text-black" for="item" value="Item UPC Code"/>
                   <TextInput
                       id="item"
                       v-model="itemInfo.upc_code"
@@ -237,7 +237,7 @@
                 </div>
 
                 <div class="mt-2">
-                  <InputLabel for="item" value="Item MSRP"/>
+                  <InputLabel class="dark:text-black" for="item" value="Item MSRP"/>
                   <TextInput
                       id="item"
                       v-model="itemInfo.msrp"
@@ -248,7 +248,7 @@
                 </div>
 
                 <div class="mt-2">
-                  <InputLabel for="item" value="Item Retail Price"/>
+                  <InputLabel class="dark:text-black" for="item" value="Item Retail Price"/>
                   <TextInput
                       id="item"
                       v-model="itemInfo.retail_price"
@@ -259,7 +259,7 @@
                 </div>
 
                 <div class="mt-2">
-                  <InputLabel for="item" value="Item Type"/>
+                  <InputLabel class="dark:text-black" for="item" value="Item Type"/>
                   <TextInput
                       id="item"
                       v-model="itemInfo.type"
@@ -292,7 +292,7 @@
         <div class="clear-both pt-5"></div>
         <h2 class="text-2xl pb-3 font-extrabold dark:text-white" v-if="itemInfo.isEmpty == 1">Item not found. Please enter the details below.</h2>
         <div class="mt-2">
-          <InputLabel for="item" value="Item Description"/>
+          <InputLabel class="dark:text-white" for="item" value="Item Description"/>
           <TextInput
               id="item"
               v-model="itemInfo.description"
@@ -304,7 +304,7 @@
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item Number"/>
+          <InputLabel class="dark:text-white" for="item" value="Item Number"/>
           <TextInput
               id="item"
               v-model="itemInfo.item"
@@ -317,7 +317,7 @@
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item UPC Code"/>
+          <InputLabel class="dark:text-white" for="item" value="Item UPC Code"/>
           <TextInput
               id="item"
               v-model="itemInfo.upc_code"
@@ -328,7 +328,7 @@
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item MSRP"/>
+          <InputLabel class="dark:text-white" for="item" value="Item MSRP"/>
           <TextInput
               id="item"
               v-model="itemInfo.msrp"
@@ -339,7 +339,7 @@
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item Retail Price"/>
+          <InputLabel class="dark:text-white" for="item" value="Item Retail Price"/>
           <TextInput
               id="item"
               v-model="itemInfo.retail_price"
@@ -354,12 +354,12 @@
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item Image"/>
+          <InputLabel class="dark:text-white" for="item" value="Item Image"/>
           <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 w-3/4" id="file_input" type="file"  accept="image/*" capture="camera" @change="onImageChange">
         </div>
 
         <div class="mt-2">
-          <InputLabel for="item" value="Item type"/>
+          <InputLabel class="dark:text-white" for="item" value="Item type"/>
           <select
             class="w-3/4"
             v-model="itemInfo.type"
