@@ -68,11 +68,38 @@ class ScannerController extends Controller
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
         //exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
         exec('zbarimg -S enable '.$storagePath, $result);
-  
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
                 $code = explode(":", $data);
                 if($code[0] == "UPC-A"){
+                    $item = substr($data, strpos($data, ":") + 1);
+                    
+                    $scannedItem = ScannedItem::where('upc_code', $item)->first();
+                    $upc_code = UpcCode::where('upc_code', $item)->first();
+
+                    if(collect($scannedItem)->isEmpty() && collect($upc_code)->isEmpty()){
+                        $image = Dropbox::files()->upload($path = '', $storagePath);
+                        $decodedImage = json_decode($image,true);
+                        $imagePath = $decodedImage['path_display'];
+
+                        $token = DB::table('dropbox_tokens')->first();
+
+                        $adapter = \Storage::disk('dropbox')->getAdapter();
+                        $client = $adapter->getClient();
+                        $client->setAccessToken($token->access_token);
+
+                        $link = $client->createSharedLinkWithSettings($imagePath);
+                        $decodedImage = json_decode($image,true);
+                        $newItem = new ScannedItem();
+                        $newItem->item = null;
+                        $newItem->upc_code = $item;
+                        $newItem->image_name = $link['url'].'&raw=1';
+                        $newItem->save();
+                        return Inertia::render('Scanner',['message' => 'UPC code successfully added.', 'status' => 'success']);
+                    } else {
+                        return Inertia::render('Scanner',['message' => 'UPC code already exists.', 'status' => 'info']);
+                    }
+                }elseif($code[0] == "EAN-13"){
                     $item = substr($data, strpos($data, ":") + 1);
                     
                     $scannedItem = ScannedItem::where('upc_code', $item)->first();

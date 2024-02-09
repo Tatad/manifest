@@ -11,24 +11,27 @@
     image: {}
   });
 
-  const image = ref(null)
-
   let onChange = (event) => {
     form.image = event.target.files ? event.target.files[0] : null;
   }
 
+  const fileUpload = ref(null);
+
+  const buttonDisabled = ref(false);
+
   const submit = () => {
     if (form.image) {
+      buttonDisabled.value = true;
       form.post(route('scan'), {
           preserveScroll: true,
           preserveState: true,
           onSuccess: (response) => {
-              console.log(response.props.message)
               form.reset()
               form.get(route('scanner'), {
                   preserveScroll: true,
                   preserveState: true,
                   onSuccess: () => {
+                      buttonDisabled.value = false;
                       form.image = ''
                       toaster.info(response.props.message, {
                         position: "top-right",
@@ -37,25 +40,6 @@
               });
           }
       });
-    // return new Promise((res, rej) => {
-    //   form.post(route('scan'), {
-    //     onSuccess: (response) => {
-    //         console.log(response)
-    //     }
-    //   })
-    // })
-    // let formData = new FormData();
-    // formData.append('image', image.value);
-    // axios.post('/scan', formData, {
-    //     headers: {
-    //         'Content-Type': 'multipart/form-data'
-    //     }
-    // }).then( (response) => {
-    //   console.log(response.data)
-    //   // toaster.info(response.props.message, {
-    //   //   position: "top-right",
-    //   // });
-    // })
     }
   }
 
@@ -75,8 +59,14 @@
         <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"></label> -->
         <div>
           <form enctype="multipart/form-data">
-          <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" type="file" @change="onChange">
-          <PrimaryButton class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
+          <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" type="file" ref="fileUpload" @change="onChange">
+          <PrimaryButton v-if="buttonDisabled == false" class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
+          <button v-if="buttonDisabled == true" type="button" class="mt-10 bg-indigo-400 h-max w-max rounded-lg text-white font-bold hover:bg-indigo-300 hover:cursor-not-allowed duration-[500ms,800ms]" disabled>
+              <div class="flex items-center justify-center m-[10px]"> 
+                  <div class="h-5 w-5 border-t-transparent border-solid animate-spin rounded-full border-white border-4"></div>
+                  <div class="ml-2"> Processing... </div>
+              </div>
+          </button>
         </form>
   <!-- <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange"> -->
   
