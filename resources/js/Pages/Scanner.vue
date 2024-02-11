@@ -10,13 +10,12 @@
   const form = useForm({
     image: {}
   });
-
+  const image = ref('');
   let onChange = async (event) => {
-    form.image = event.target.files ? event.target.files[0] : null;
-    const imageFile = event.target.files[0];
-
-  // console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
-  // console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+    // form.image = event.target.files ? event.target.files[0] : null;
+    // const imageFile = event.target.files[0];
+    image.value = event.target.files[0];
+    
 
   }
 
@@ -24,28 +23,34 @@
 
   const buttonDisabled = ref(false);
 
-  const submit = () => {
-    if (form.image) {
-      buttonDisabled.value = true;
-      form.post(route('scan'), {
-          preserveScroll: true,
-          preserveState: true,
-          onSuccess: (response) => {
-              form.reset()
-              form.get(route('scanner'), {
-                  preserveScroll: true,
-                  preserveState: true,
-                  onSuccess: () => {
-                      buttonDisabled.value = false;
-                      form.image = ''
-                      toaster.info(response.props.message, {
-                        position: "top-right",
-                      });
-                  }
-              });
-          }
-      });
-    }
+  const submit = async () => {
+    console.log('test')
+    const formdata = new FormData();
+        formdata.append('image', image.value);
+    // if (form.image) {
+    //   buttonDisabled.value = true;
+    //   form.post(route('scan'), {
+    //       preserveScroll: true,
+    //       preserveState: true,
+    //       onSuccess: (response) => {
+    //           form.reset()
+    //           form.get(route('scanner'), {
+    //               preserveScroll: true,
+    //               preserveState: true,
+    //               onSuccess: () => {
+    //                   buttonDisabled.value = false;
+    //                   form.image = ''
+    //                   toaster.info(response.props.message, {
+    //                     position: "top-right",
+    //                   });
+    //               }
+    //           });
+    //       }
+    //   });
+    // }
+    await axios.post('/scan',formdata).then((response) => {
+          alert('success')
+        });
   }
 
   const toaster = createToaster({ /* options */ });
