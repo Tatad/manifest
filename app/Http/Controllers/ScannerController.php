@@ -64,13 +64,14 @@ class ScannerController extends Controller
         $file->cleanDirectory($storagePathToClear);
 
         $imagePath = $request->file('image')->store('/images');
+        // dd($imagePath);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
         //exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
         exec('zbarimg -S enable '.$storagePath, $result);
-        dd($result);
+        //dd($result);
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
                 $code = explode(":", $data);
