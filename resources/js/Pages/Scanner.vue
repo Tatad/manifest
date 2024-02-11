@@ -13,11 +13,21 @@
 
   let onChange = (event) => {
     form.image = event.target.files ? event.target.files[0] : null;
+    const imageFile = event.target.files[0];
+  console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+  console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+
   }
 
   const fileUpload = ref(null);
 
   const buttonDisabled = ref(false);
+
+  const options = ref({
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    })
 
   const submit = () => {
     if (form.image) {
