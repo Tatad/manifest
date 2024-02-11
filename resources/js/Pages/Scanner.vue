@@ -12,7 +12,7 @@
   });
   const image = ref('');
   let onChange = async (event) => {
-    // form.image = event.target.files ? event.target.files[0] : null;
+    //form.image = event.target.files ? event.target.files[0] : null;
     // const imageFile = event.target.files[0];
     image.value = event.target.files[0];
     
@@ -23,10 +23,11 @@
 
   const buttonDisabled = ref(false);
 
-  const submit = async () => {
+  const submit = () => {
     console.log('test')
     const formdata = new FormData();
         formdata.append('image', image.value);
+        console.log(formdata);
     // if (form.image) {
     //   buttonDisabled.value = true;
     //   form.post(route('scan'), {
@@ -48,8 +49,8 @@
     //       }
     //   });
     // }
-    await axios.post('/scan',formdata).then((response) => {
-          alert('success')
+    axios.post('/scan',formdata).then((response) => {
+          window.location.reload('/')
         });
   }
 

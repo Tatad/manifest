@@ -68,8 +68,8 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-        //exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
-        exec('zbarimg -S enable '.$storagePath, $result);
+        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
+        //exec('zbarimg -S enable '.$storagePath, $result);
         // dd($result);
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
@@ -135,7 +135,7 @@ class ScannerController extends Controller
             }
         }
         //return Inertia::render('Scanner');
-        return 'success';
+        return ['message' => 'success'];
     }
 
     public function scannedList(){
