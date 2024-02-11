@@ -24,35 +24,28 @@
   const buttonDisabled = ref(false);
 
   const submit = () => {
-    console.log('test')
-    const formdata = new FormData();
-        formdata.append('image', image.value);
-        console.log(formdata);
-    // if (form.image) {
-    //   buttonDisabled.value = true;
-    //   form.post(route('scan'), {
-    //       preserveScroll: true,
-    //       preserveState: true,
-    //       onSuccess: (response) => {
-    //           form.reset()
-    //           form.get(route('scanner'), {
-    //               preserveScroll: true,
-    //               preserveState: true,
-    //               onSuccess: () => {
-    //                   buttonDisabled.value = false;
-    //                   form.image = ''
-    //                   toaster.info(response.props.message, {
-    //                     position: "top-right",
-    //                   });
-    //               }
-    //           });
-    //       }
-    //   });
-    // }
-    axios.post('/scan',formdata).then((response) => {
-      alert('success');
-          window.location.reload('/')
-        });
+    form.image = image.value
+    if (form.image) {
+      buttonDisabled.value = true;
+      form.post(route('scan'), {
+          preserveScroll: true,
+          preserveState: true,
+          onSuccess: (response) => {
+              form.reset()
+              form.get(route('scanner'), {
+                  preserveScroll: true,
+                  preserveState: true,
+                  onSuccess: () => {
+                      buttonDisabled.value = false;
+                      form.image = ''
+                      toaster.info(response.props.message, {
+                        position: "top-right",
+                      });
+                  }
+              });
+          }
+      });
+    }
   }
 
   const toaster = createToaster({ /* options */ });
