@@ -58,7 +58,7 @@ class ScannerController extends Controller
 
     public function scan(Request $request){
         $input = $request->all();
-        dd($input);
+        //dd($input);
         $file = new Filesystem;
         $storagePathToClear = storage_path('app/images/');
         $file->cleanDirectory($storagePathToClear);
