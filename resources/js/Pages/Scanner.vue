@@ -11,23 +11,18 @@
     image: {}
   });
 
-  let onChange = (event) => {
+  let onChange = async (event) => {
     form.image = event.target.files ? event.target.files[0] : null;
     const imageFile = event.target.files[0];
-  console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
-  console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+
+  // console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+  // console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
   }
 
   const fileUpload = ref(null);
 
   const buttonDisabled = ref(false);
-
-  const options = ref({
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-    })
 
   const submit = () => {
     if (form.image) {
@@ -69,7 +64,7 @@
         <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"></label> -->
         <div>
           <form enctype="multipart/form-data">
-          <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" type="file" ref="fileUpload" @change="onChange">
+          <input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-white focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" type="file" ref="fileUpload" @change="onChange($event)"  accept="image/*">
           <PrimaryButton v-if="buttonDisabled == false" class="mt-10" @click.prevent="submit">Submit</PrimaryButton>
           <button v-if="buttonDisabled == true" type="button" class="mt-10 bg-indigo-400 h-max w-max rounded-lg text-white font-bold hover:bg-indigo-300 hover:cursor-not-allowed duration-[500ms,800ms]" disabled>
               <div class="flex items-center justify-center m-[10px]"> 
