@@ -134,8 +134,7 @@ class ScannerController extends Controller
                 
             }
         }
-        //return Inertia::render('Scanner');
-        return ['message' => 'success'];
+        return Inertia::render('Scanner');
     }
 
     public function scannedList(){

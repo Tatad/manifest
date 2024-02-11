@@ -12,7 +12,7 @@
   });
   const image = ref('');
   const MAX_WIDTH = 320;
-const MAX_HEIGHT = 180;
+  const MAX_HEIGHT = 180;
   let onChange = async (event) => {
     // const imageFile = event.target.files[0];
     image.value = event.target.files[0];
