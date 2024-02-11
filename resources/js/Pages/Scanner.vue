@@ -50,6 +50,7 @@
     //   });
     // }
     axios.post('/scan',formdata).then((response) => {
+      alert('success');
           window.location.reload('/')
         });
   }
