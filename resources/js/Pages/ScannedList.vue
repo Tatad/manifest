@@ -157,7 +157,7 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Scanned List</h2>
     </template>
 
-    <div class="py-3">
+    <div class="py-3 mb-40">
       <EasyDataTable
           :headers="headers"
           :items="list"

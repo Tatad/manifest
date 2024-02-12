@@ -36,7 +36,38 @@
   });
 
   let onChange = (event) => {
-    form.image = event.target.files ? event.target.files[0] : null;
+    //form.image = event.target.files ? event.target.files[0] : null;
+    image.value = event.target.files[0];
+    
+    console.log('originalFile instanceof Blob', image.value instanceof Blob); // true
+    console.log(`originalFile size ${image.value.size / 1024 / 1024} MB`);
+    const file = event.target.files[0]; // get the file
+    const blobURL = URL.createObjectURL(file);
+    console.log(blobURL)
+    const img = new Image();
+    img.src = blobURL;
+    console.log(img.src)
+
+    img.onload = function () {
+      const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
+      const canvas = document.createElement("canvas");
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      canvas.toBlob(
+        (blob) => {
+          // Handle the compressed image.
+          const displayTag = document.createElement('h1');
+          displayTag.innerText = `Original Image - ${readableBytes(file.size)} :::::: Compressed Image - ${readableBytes(blob.size)}`;
+          console.log(displayTag)
+          form.image = blob
+          //console.log(blob)
+           //document.getElementById('container').append(displayTag);
+        },
+      );
+    };
+    
     form.post(route('scanUpcCode'), {
         onSuccess: (response) => {
             console.log(response.props.code)
@@ -51,6 +82,32 @@
             });
         }
     });
+  }
+
+  function calculateSize(img, maxWidth, maxHeight) {
+    let width = img.width;
+    let height = img.height;
+
+    // calculate the width and height, constraining the proportions
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+    return [width, height];
+  }
+
+  function readableBytes(bytes) {
+    const i = Math.floor(Math.log(bytes) / Math.log(1024)),
+      sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
   }
 
   const submit = () => {
