@@ -39,8 +39,8 @@ class ScannerController extends Controller
         
         $storagePath = storage_path('app/images/'.$filename);
         $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-        exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
-        //exec('zbarimg -S enable '.$storagePath, $result);
+        //exec('C:\\"Program Files (x86)"\\ZBar\\bin\\zbarimg -S enable '.$storagePath, $result);
+        exec('zbarimg -S enable '.$storagePath, $result);
 
         if(collect($result)->isNotEmpty()){
             foreach($result as $data){
