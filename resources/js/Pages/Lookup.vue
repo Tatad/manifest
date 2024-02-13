@@ -323,8 +323,8 @@
         </div>
 
         <div class="mt-6 mb-6 flex justify-end">
+            <SecondaryButton v-if="buttonDisabled == false" class="mr-4" @click="closeModal"> Close </SecondaryButton>
             <PrimaryButton v-if="buttonDisabled == false" class="mr-4" @click="save"> Submit </PrimaryButton>
-
 
             <button v-if="buttonDisabled == true" type="button" class="bg-indigo-400 h-max w-max rounded-lg text-white font-bold hover:bg-indigo-300 hover:cursor-not-allowed duration-[500ms,800ms]" disabled>
               <div class="flex items-center justify-center m-[10px]"> 
