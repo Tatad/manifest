@@ -131,10 +131,10 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Item Lookup</h2>
     </template>
 
-    <div class="py-3 mb-6">
+    <div class="py-3 mb-40">
 
       <div>
-        <InputLabel for="item" value="Item Number"/>
+        <InputLabel class="dark:text-white" for="item" value="Item Number"/>
         <div class="grid grid-cols-2 gap-1">
           <TextInput
               id="item"
@@ -146,7 +146,8 @@
         </div>
       </div>
 
-      <PrimaryButton class="mt-10" @click.prevent="submit">Lookup Item Record</PrimaryButton>
+      <PrimaryButton class="mt-10 dark:bg-gray-400 dark:text-white" v-if="form.item.length == 0" disabled>Lookup Item Record</PrimaryButton>
+      <PrimaryButton class="mt-10" @click.prevent="submit" v-if="form.item.length > 0">Lookup Item Record</PrimaryButton>
 
       <!--preview item modal-->
       <Modal :show="previewItemModal" @close="closeModal">

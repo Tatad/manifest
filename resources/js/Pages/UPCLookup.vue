@@ -35,8 +35,13 @@
     scanMethod: 'upc'
   });
 
+  const image = ref('');
+  const MAX_WIDTH = 620;
+  const MAX_HEIGHT = 880;
+
   let onChange = (event) => {
     //form.image = event.target.files ? event.target.files[0] : null;
+
     image.value = event.target.files[0];
     
     console.log('originalFile instanceof Blob', image.value instanceof Blob); // true
@@ -62,26 +67,25 @@
           displayTag.innerText = `Original Image - ${readableBytes(file.size)} :::::: Compressed Image - ${readableBytes(blob.size)}`;
           console.log(displayTag)
           form.image = blob
+          form.post(route('scanUpcCode'), {
+            onSuccess: (response) => {
+                console.log(response.props.code)
+                upcCode.value = response.props.code
+                // form.reset()
+                form.get(route('UpcLookup'), {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                      form.upc_code = response.props.code
+                    }
+                });
+            }
+          });
           //console.log(blob)
            //document.getElementById('container').append(displayTag);
         },
       );
     };
-    
-    form.post(route('scanUpcCode'), {
-        onSuccess: (response) => {
-            console.log(response.props.code)
-            upcCode.value = response.props.code
-            // form.reset()
-            form.get(route('UpcLookup'), {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                  form.upc_code = response.props.code
-                }
-            });
-        }
-    });
   }
 
   function calculateSize(img, maxWidth, maxHeight) {
@@ -201,7 +205,7 @@
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight dark:text-white">Item Lookup</h2>
     </template>
 
-    <div class="py-3 mb-6">
+    <div class="py-3 mb-40">
       <!-- <div class="flex mb-6">
         <InputLabel for="item" value="Scan Item by:"/>
         <div class="pl-2 flex items-center me-4">
@@ -252,8 +256,8 @@
           />
         </div>
       </div>
-
-      <PrimaryButton class="mt-10" @click.prevent="submit">Lookup UPC Record</PrimaryButton>
+      <PrimaryButton class="mt-10 dark:bg-gray-400 dark:text-white" v-if="form.upc_code.length == 0" disabled>Lookup UPC Record</PrimaryButton>
+      <PrimaryButton class="mt-10" @click.prevent="submit" v-if="form.upc_code.length > 0">Lookup UPC Record</PrimaryButton>
 
       <!--preview item modal-->
       <Modal :show="previewItemModal" @close="closeModal">
