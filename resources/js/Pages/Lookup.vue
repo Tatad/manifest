@@ -29,7 +29,7 @@
     upc_code: '',
     description: '',
     isEmpty: 0,
-    image: '',
+    image: [],
     type: '',
     msrp: 0,
     retail_price: 0,
@@ -107,21 +107,98 @@
               form.upc_code = ''
               itemInfo.value = [];
               previewItemModal.value = false;
-              buttonDisabled.value = false;
               toaster.info('Item saved successfully.', {
                 position: "top-right",
               });
             }
-        });
+          });
+        },
+        onError: () => {
+          buttonDisabled.value = false;
         }
     });
   }
-
+  const image = ref('');
+  const imageThumb = ref([]);
+  const MAX_WIDTH = 620;
+  const MAX_HEIGHT = 880;
+  const fileUpload = ref(null);
   let onChange = (event) => {
-    form.image = event.target.files ? event.target.files[0] : null;
+    imageThumb.value = []
+    for (var i = 0; i < fileUpload.value.files.length; i++ ){
+      let file = fileUpload.value.files[i];
+      imageThumb.value.push(URL.createObjectURL(file))
+
+      const blobURL = URL.createObjectURL(file);
+      const img = new Image();
+      img.src = blobURL;
+
+      img.onload = function () {
+        const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
+        const canvas = document.createElement("canvas");
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+        canvas.toBlob(
+          (blob) => {
+            // Handle the compressed image.
+            form.image.push(blob)
+          },
+        );
+      };
+    }
+  }
+
+  let onImageChangeCapture = (event) => {
+    imageThumb.value = []
+    let file = event.target.files ? event.target.files[0] : null;
+    imageThumb.value.push(URL.createObjectURL(file))
+    const blobURL = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = blobURL;
+    img.onload = function () {
+        const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
+        const canvas = document.createElement("canvas");
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+        canvas.toBlob(
+          (blob) => {
+            form.image.push(blob)
+          },
+        );
+      };
   }
 
   const selected = ref('item')
+
+  function calculateSize(img, maxWidth, maxHeight) {
+    let width = img.width;
+    let height = img.height;
+
+    // calculate the width and height, constraining the proportions
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+    return [width, height];
+  }
+
+  function readableBytes(bytes) {
+    const i = Math.floor(Math.log(bytes) / Math.log(1024)),
+      sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
+  }
 </script>
 
 <template>
@@ -142,6 +219,7 @@
               type="readonly"
               class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
               placeholder="Item Number"
+              min="8"
           />
         </div>
       </div>
@@ -219,10 +297,10 @@
                       placeholder="Item Type" readonly
                   />
                 </div>
-
-                <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
-                  <InputLabel for="item" value="Item image"/>
-                  <img :src="image"  class="pt-6 object-cover w-52">
+                <div class="grid grid-cols-3 gap-1">
+                  <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
+                    <img :src="image"  class="pt-6 object-cover" width="100">
+                  </div>
                 </div>
             </div>
 
@@ -266,6 +344,7 @@
               class="border-solid border-2 border-black-600 p-2 mt-1 block block w-3/4 bg-gray-200"
               placeholder="Item Number" :readonly="selected == 'item'"
           />
+          <InputError class="mt-2" :message="form.errors.item" />
         </div>
 
         <div class="mt-2">
@@ -301,13 +380,32 @@
           />
         </div>
 
-        <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
-          <img :src="image"  class="pt-6 object-cover w-52">
+        <div class="grid grid-cols-3 gap-1 pb-2">
+          <div class="mt-2" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
+            <img :src="(image)"  class="pt-6 object-cover" width="100">
+          </div>
         </div>
 
         <div class="mt-2">
           <InputLabel class="dark:text-white" for="item" value="Item Image"/>
-          <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 w-3/4" id="file_input" type="file"  accept="image/*" capture="camera" @change="onChange">
+          <div class="grid grid-cols-2 gap-1">
+            <input class="block text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 w-full" id="file_input" type="file"  multiple="multiple" accept="image/*" @change="onChange" ref="fileUpload">
+
+            <label for="myfileid" class="icon pl-4 dark:text-white w-1/4">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                </svg>
+              </span>
+            </label>
+            <input id="myfileid" style="display:none;" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" type="file"  accept="image/*" capture="camera" @change="onImageChangeCapture">
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 pt-4 pb-4" v-if="imageThumb">
+            <img v-for="image in imageThumb" :src="image" width="100">
+          </div>
+          <!-- <img v-if="form.image" :src="form.image" > -->
         </div>
 
         <div class="mt-2">

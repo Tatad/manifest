@@ -162,7 +162,7 @@ class ScannerController extends Controller
             $item['isEmpty'] = 0;
             $item['scrapingbee'] = 0;
         }
-        //return $item;
+
         $lists = ScannedItem::all();
 
         return Inertia::render('ScannedList', [
@@ -255,7 +255,6 @@ class ScannerController extends Controller
             }
         }else{
             $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
-            //dd($upcCodeCheck);
             if(collect($upcCodeCheck)->isEmpty()){
                 $upc_code = new UpcCode();
                 $upc_code->item = $input['item'];
@@ -266,17 +265,6 @@ class ScannerController extends Controller
                 $upcCodeCheck->upc_code = $input['upc_code'];
                 $upcCodeCheck->save();
             }
-
-            // $manifestCheck->item = $input['item'];
-            // $manifestCheck->description = $input['description'];
-            // $manifestCheck->item_name = $input['description'];
-            // $manifestCheck->quantity = 1;
-            // $manifestCheck->msrp = $input['msrp'];
-            // $manifestCheck->retail_price = $input['retail_price'];
-            // $manifestCheck->total = $input['msrp'];
-            // $manifestCheck->quantity = 1;
-            // $manifestCheck->type = $input['type'];
-            // $manifestCheck->save();
         }
 
         $scannedItem = ScannedItem::where('upc_code', $input['upc_code'])->delete();
@@ -298,9 +286,10 @@ class ScannerController extends Controller
             'retail_price' => 'required'
         ]);
         $input = $request->all();
-
+        //dd($input);
         $manifestCheck = Manifest::where('item', $input['item'])->first();
 
+        $imageURLArray = [];
         if(collect($manifestCheck)->isEmpty()){
             $manifest = new Manifest();
             $manifest->item = $input['item'];
@@ -317,26 +306,30 @@ class ScannerController extends Controller
                 $storagePathToClear = storage_path('app/images/');
                 $file->cleanDirectory($storagePathToClear);
 
-                $imagePath = $request->file('image')->store('/images');
-                $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-                
-                $storagePath = storage_path('app/images/'.$filename);
-                $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+                foreach($request->file('image') as $image){
+                    $imagePath = $image->store('/images');
+                    $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+                    
+                    $storagePath = storage_path('app/images/'.$filename);
+                    $filename = substr($imagePath, strpos($imagePath, "/") + 1);
 
-                $image = Dropbox::files()->upload($path = '', $storagePath);
-                $decodedImage = json_decode($image,true);
-                $imagePath = $decodedImage['path_display'];
+                    $dropboxImage = Dropbox::files()->upload($path = '', $storagePath);
+                    $decodedImage = json_decode($dropboxImage,true);
+                    $imagePath = $decodedImage['path_display'];
 
-                $token = DB::table('dropbox_tokens')->first();
+                    $token = DB::table('dropbox_tokens')->first();
 
-                $adapter = \Storage::disk('dropbox')->getAdapter();
-                $client = $adapter->getClient();
-                $client->setAccessToken($token->access_token);
+                    $adapter = \Storage::disk('dropbox')->getAdapter();
+                    $client = $adapter->getClient();
+                    $client->setAccessToken($token->access_token);
 
-                $link = $client->createSharedLinkWithSettings($imagePath);
-
-                $manifest->images = json_encode([$link['url'].'&raw=1']);
+                    $link = $client->createSharedLinkWithSettings($imagePath);
+                    $imageURLArray[] = $link['url'].'&raw=1';
+                    //$manifest->images = json_encode([$link['url'].'&raw=1']);
+                }
             }
+
+            $manifest->images = json_encode($imageURLArray);
             $manifest->save();
 
             $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
@@ -378,36 +371,34 @@ class ScannerController extends Controller
                 $storagePathToClear = storage_path('app/images/');
                 $file->cleanDirectory($storagePathToClear);
 
-                $imagePath = $request->file('image')->store('/images');
-                $filename = substr($imagePath, strpos($imagePath, "/") + 1);
-                
-                $storagePath = storage_path('app/images/'.$filename);
-                $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+                foreach($request->file('image') as $image){
+                    $imagePath = $image->store('/images');
+                    $filename = substr($imagePath, strpos($imagePath, "/") + 1);
+                    
+                    $storagePath = storage_path('app/images/'.$filename);
+                    $filename = substr($imagePath, strpos($imagePath, "/") + 1);
 
-                $image = Dropbox::files()->upload($path = '', $storagePath);
-                $decodedImage = json_decode($image,true);
-                $imagePath = $decodedImage['path_display'];
+                    $dropboxImage = Dropbox::files()->upload($path = '', $storagePath);
+                    $decodedImage = json_decode($dropboxImage,true);
+                    $imagePath = $decodedImage['path_display'];
 
-                $token = DB::table('dropbox_tokens')->first();
+                    $token = DB::table('dropbox_tokens')->first();
 
-                $adapter = \Storage::disk('dropbox')->getAdapter();
-                $client = $adapter->getClient();
-                $client->setAccessToken($token->access_token);
+                    $adapter = \Storage::disk('dropbox')->getAdapter();
+                    $client = $adapter->getClient();
+                    $client->setAccessToken($token->access_token);
 
-                $link = $client->createSharedLinkWithSettings($imagePath);
-                
-                $manifestCheck->images = json_encode([$link['url'].'&raw=1']);
+                    $link = $client->createSharedLinkWithSettings($imagePath);
+                    
+                    $imageURLArray[] = [$link['url'].'&raw=1'];
+                    //$manifestCheck->images = ;
+                }
             }
+            $manifestCheck->images = json_encode($imageURLArray);
             $manifestCheck->save();
         }
 
         $scannedItem = ScannedItem::where('upc_code', $input['upc_code'])->delete();
-
-        // $lists = ScannedItem::all();
-
-        // return Inertia::render('ScannedList', [
-        //     'list'  => $lists
-        // ]); 
 
         if($input['scanMethod'] == 'item'){
             return Inertia::render('Lookup'); 

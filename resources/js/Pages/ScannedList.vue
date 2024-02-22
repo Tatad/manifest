@@ -271,8 +271,7 @@
                     </div>
 
                     <div class="pt-6" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
-
-                      <img class="pt-6 object-cover w-52" :src="image" alt="image description">
+                      <img class="pt-6 object-cover" :src="image" alt="image description">
                     </div>
                     
                   </div>
