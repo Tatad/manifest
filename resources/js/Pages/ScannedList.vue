@@ -173,7 +173,7 @@
         </template>
 
         <template #item-action="item">
-          <PrimaryButton @click.prevent="itemNumber(item)">Edit</PrimaryButton>
+          <PrimaryButton @click.prevent="itemNumber(item)" class="px-4 my-4 bg-red-400">Edit</PrimaryButton>
         </template>
       </EasyDataTable>  
 
@@ -351,8 +351,8 @@
 
               <div class="mt-6 flex justify-end">
                   <SecondaryButton v-if="buttonDisabled == false" class="mr-4" @click="closeModal"> Close </SecondaryButton>
-                  <PrimaryButton v-if="buttonDisabled == false && itemInfo.length == 0"  class="mr-4" @click="lookUpItem"> Lookup </PrimaryButton>
-                  <PrimaryButton v-if="buttonDisabled == false && itemInfo.item" class="mr-4" @click="submit"> Submit </PrimaryButton>
+                  <PrimaryButton v-if="buttonDisabled == false && itemInfo.length == 0"  class="mr-4 bg-gray-400 dark:bg-gray-400 text-xs px-4" @click="lookUpItem"> Lookup </PrimaryButton>
+                  <PrimaryButton v-if="buttonDisabled == false && itemInfo.item" class="mr-4 bg-gray-400 dark:bg-gray-400 text-xs px-4" @click="submit"> Submit </PrimaryButton>
 
 
                   <button v-if="buttonDisabled == true" type="button" class="bg-indigo-400 h-max w-max rounded-lg text-white font-bold hover:bg-indigo-300 hover:cursor-not-allowed duration-[500ms,800ms]" disabled>
