@@ -408,4 +408,16 @@ class ScannerController extends Controller
             return Inertia::render('UPCLookup'); 
         }
     }
+
+    public function removeScannedItem(Request $request)
+    {
+        $input = $request->all();
+        ScannedItem::where('id',$input['id'])->delete();
+
+        $lists = ScannedItem::all();
+
+        return Inertia::render('ScannedList', [
+            'list'  => $lists
+        ]); 
+    }
 }

@@ -97,7 +97,6 @@ Route::post('/add-item', 'App\Http\Controllers\ScannerController@addItem')->name
 Route::post('/scan-upc-code', 'App\Http\Controllers\ScannerController@scanUpcCode')->name('scanUpcCode');
 Route::post('/lookup-upc-code', 'App\Http\Controllers\ScannerController@lookupUpcCode')->name('lookupUpcCode');
 Route::post('/add-item-scanned-list', 'App\Http\Controllers\ScannerController@addItemViaScannedList')->name('addItemViaScannedList');
-
-
+Route::post('/remove-scanned-item', 'App\Http\Controllers\ScannerController@removeScannedItem')->name('removeScannedItem');
 
 require __DIR__.'/auth.php';

@@ -53,7 +53,7 @@
               itemInfo.value.upc_code = response.props.data.upc_code
 
               previewItemModal.value = true
-              itemInfo.value.confirmed = false;
+              itemInfo.value.confirmed = true;
             }else{
 
               itemInfo.value = response.props.data
@@ -211,111 +211,26 @@
     <div class="py-3 mb-40">
 
       <div class="bg-white dark:bg-indigo-100 py-8 px-4 rounded-lg">
-        <InputLabel class="dark:text-gray-800 text-xl" for="item" value="Item Number"/>
-        <div>
-          <TextInput
-              id="item"
-              v-model="form.item"
-              type="readonly"
-              class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-              placeholder="Item Number"
-              min="8"
-          />
-        </div>
+        <form @submit.prevent="submit">
+          <InputLabel class="dark:text-gray-800 text-xl" for="item" value="Item Number"/>
+          <div>
+            <TextInput
+                id="item"
+                v-model="form.item"
+                type="readonly"
+                class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
+                placeholder="Item Number"
+                min="8"
+            />
+          </div>
 
-        <PrimaryButton class="mt-10 dark:bg-gray-400 dark:text-white px-4" v-if="form.item.length == 0" disabled>Lookup Item Record</PrimaryButton>
-        <PrimaryButton class="mt-10 dark:bg-red-400 dark:text-white px-4" @click.prevent="submit" v-if="form.item.length > 0">Lookup Item Record</PrimaryButton>
+          <PrimaryButton class="mt-10 dark:bg-gray-400 dark:text-white px-4" v-if="form.item.length == 0" disabled>Lookup Item Record</PrimaryButton>
+          <PrimaryButton class="mt-10 dark:bg-red-400 dark:text-white px-4" v-if="form.item.length > 0">Lookup Item Record</PrimaryButton>
+        </form>
       </div>
 
-      <!--preview item modal-->
-      <Modal :show="previewItemModal" @close="closeModal">
-          <div class="p-6" v-if="itemInfo">
-            <h2 class="text-2xl font-extrabold dark:text-black">Is this the item you are looking for?</h2>
-            <div class="mt-6">
-               <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" for="item" value="Item Description"/>
-                  <TextInput
-                      id="item"
-                      v-model="itemInfo.description"
-                      type="text"
-                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-                      placeholder="Item Description" readonly
-                  />
-                </div>
-
-                <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" value="Item Number"/>
-                  <TextInput
-                      id="item"
-                      v-model="itemInfo.item"
-                      type="number"
-                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-                      placeholder="Item Number" readonly
-                  />
-                </div>
-
-                <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" value="Item UPC Code"/>
-                  <TextInput
-                      id="item"
-                      v-model="itemInfo.upc_code"
-                      type="number"
-                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-                      placeholder="Item UPC Code" readonly
-                  />
-                </div>
-
-                <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" value="Item MSRP"/>
-                  <TextInput
-                      id="item"
-                      v-model="itemInfo.msrp"
-                      type="number"
-                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-                      placeholder="Item MSRP" readonly
-                  />
-                </div>
-
-                <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" value="Item Retail Price"/>
-                  <TextInput
-                      id="item"
-                      v-model="itemInfo.retail_price"
-                      type="number"
-                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-                      placeholder="Item Retail Price" readonly
-                  />
-                </div>
-
-                <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" value="Item Type"/>
-                  <TextInput
-                      id="item"
-                      v-model="itemInfo.type"
-                      type="text"
-                      class="border-solid border-2 border-black-600 p-2 mt-1 block block w-full"
-                      placeholder="Item Type" readonly
-                  />
-                </div>
-                <div class="mt-2">
-                  <InputLabel class="dark:text-black text-xl" for="item" value="Item Images"/>
-                  <div class="grid grid-cols-3 md:grid-cols-3 gap-4">
-                    <div class="mt-2 bg-stone-300 py-4 px-4 rounded-lg flex justify-center items-center" v-if="itemInfo.images" v-for="image in JSON.parse(itemInfo.images)">
-                      <img :src="(image)"  class="h-auto max-w-full">
-                    </div>
-                  </div>
-                </div>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <SecondaryButton class="mr-4" @click="closeModal"> No </SecondaryButton>
-                <PrimaryButton class="mr-4 bg-green-400 px-4" @click="itemInfo.confirmed = true;previewItemModal = false"> Yes </PrimaryButton>
-            </div>
-          </div>
-      </Modal>
-
       <div class="mt-6 border-2 px-5 pt-6 bg-indigo-100 dark:bg-indigo-100 rounded-lg" v-if="itemInfo && itemInfo.confirmed == true">
-        <div v-if="buttonDisabled == false" class="dark:text-black font-extrabold float-right" @click.prevent="itemInfo = [];form.item = ''">
+        <div v-if="buttonDisabled == false" class="dark:text-black font-extrabold float-right" @click.prevent="itemInfo = [];form.item = '';itemInfo.confirmed = false;">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
