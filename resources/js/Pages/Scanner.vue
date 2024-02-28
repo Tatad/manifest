@@ -148,7 +148,7 @@
 
                 <div class="grid grid cols-3 grid-cols-subgrid gap-4">
                   <span>
-                    <h1 class=" bg-red-400 w-full text-xl py-4 px-8 rounded-lg text-center uppercase">Choose File</h1>
+                    <h1 class=" bg-red-400 w-full text-base py-4 px-2 rounded-lg text-center uppercase xs:text-sm">Choose File</h1>
                   </span>
 
                   <label for="addImage" class="icon pt-4 col-start-3 bg-indigo-500 px-4 rounded-lg text-white">
