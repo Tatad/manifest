@@ -135,7 +135,7 @@
       <span class="tag">
         <!-- <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input"></label> -->
         <div>
-          <form enctype="multipart/form-data">
+          <form enctype="multipart/form-data" class="w-84">
             <label for="myfileid" class="wrapper bg-white dark:bg-indigo-100 rounded-lg py-8 icon dark:text-white flex justify-center ">
               <div>
                 <div class="w-full bg-stone-100 text-center py-4 rounded-lg mb-8 w-full text-gray-900">
@@ -146,9 +146,9 @@
                   <img :src="imageThumb" width="100">
                 </div>
 
-                <div class="grid grid cols-3 grid-cols-subgrid gap-4">
+                <div class="grid grid cols-3 grid-cols-subgrid gap-4 w-full">
                   <span>
-                    <h1 class=" bg-red-400 w-full text-base py-4 px-2 rounded-lg text-center uppercase xs:text-sm">Choose File</h1>
+                    <h1 class=" bg-red-400 w-32 text-base py-4 px-2 rounded-lg text-center uppercase xs:text-sm">Choose File</h1>
                   </span>
 
                   <label for="addImage" class="icon pt-4 col-start-3 bg-indigo-500 px-4 rounded-lg text-white">
