@@ -65,16 +65,14 @@ const itemHeaders: Header[] = [
 const upcCodesHeaders: Header[] = [
     { text: "", value: "selected" },
     { text: "Item #", value: "item", sortable: true},
-    { text: "UPC Code", value: "upc_code", sortable: true},
-    { text: "Actions",  value: "action"}
+    { text: "UPC Code", value: "upc_code", sortable: true}
 ];
 
 const scannedItemsHeader: Header[] = [
     { text: "", value: "selected" },
     { text: "Item #", value: "item", sortable: true},
     { text: "UPC Code", value: "upc_code", sortable: true},
-    { text: "Image", value: "image_name", sortable: true},
-    { text: "Actions",  value: "action"}
+    { text: "Image", value: "image_name", sortable: true}
 ];
 
 const addNewItemModal = ref(false);
