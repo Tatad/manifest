@@ -46,7 +46,7 @@ class AdminController extends Controller
                     'totalMsrp' => round(($data->quantity * $data->manifest->msrp),2),
                     'type' => $data->manifest->type,
                     'retail_price' => $data->manifest->retail_price,
-                    'upc_code' => collect($data->manifest->upcCodes)->isNOtEmpty() ? $data->manifest->upcCodes->pluck('upc_code') : 0,
+                    'upc_code' => collect($data->manifest->upcCodes)->isNOtEmpty() ? $data->manifest->upcCodes->pluck('upc_code') : [],
                     'created_at' => $data->manifest->created_at
                 ];
             }

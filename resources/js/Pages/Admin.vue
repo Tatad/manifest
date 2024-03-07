@@ -150,7 +150,7 @@ const toaster = createToaster({ /* options */ });
                       </template>
 
                       <template #item-upc_code=item>
-                          {{item.upc_code}}
+                          <div v-if="item.upc_code.length">{{item.upc_code}}</div><div v-else>N/A</div>
                       </template>
 
                       <template #item-images="item">
@@ -190,14 +190,6 @@ const toaster = createToaster({ /* options */ });
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <div class="flex w-full mt-4 mb-4">
-                                <div><h1 class="text-lg font-semibold pr-4 mt-1">UPC Codes</h1></div>
-                                <PrimaryButton @click.prevent="addNewUPCModal = true;" class="w-2/12">
-                                    <span class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 mr-2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>Add UPC Code</span>
-                                </PrimaryButton>
-                            </div>
                             <EasyDataTable :headers="upcCodesHeaders"
                               :items="upcCodes">
 
