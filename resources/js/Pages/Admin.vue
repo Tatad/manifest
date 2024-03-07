@@ -126,7 +126,7 @@ const toaster = createToaster({ /* options */ });
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg px-8 py-8">
                     <div class="flex w-full mb-4">
                         <div><h1 class="text-lg font-semibold w-2/12 pr-4 mt-1">Items</h1></div>
-                        <PrimaryButton @click.prevent="addNewItemModal = true;" class="w-1/12">
+                        <PrimaryButton @click.prevent="addNewItemModal = true;" class="w-40">
                             <span class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>Add New Item</span>
