@@ -75,6 +75,7 @@ const showingNavigationDropdown = ref(false);
 
                                     <template #content>
                                         <DropdownLink :href="route('profile.edit')"> Profile </DropdownLink>
+                                        <DropdownLink :href="route('admin')" v-if="$page.props.auth.user.email == 'rashad@salixsys.ca' || $page.props.auth.user.email == 'ry@gmail.com'"> Admin </DropdownLink>
                                         <DropdownLink :href="route('logout')" method="post" as="button">
                                             Log Out
                                         </DropdownLink>

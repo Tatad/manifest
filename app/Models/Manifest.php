@@ -35,6 +35,11 @@ class Manifest extends Model
         return $this->belongsTo(UpcCode::class, 'item', 'item');
     }
 
+    public function upcCodes()
+    {
+        return $this->hasMany(UpcCode::class, 'item', 'item');
+    }
+
     public function palletItems()
     {
         return $this->belongsTo(PalletItem::class, 'item', 'item_number');

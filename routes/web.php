@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ManifestController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegistrationController;
@@ -98,5 +99,10 @@ Route::post('/scan-upc-code', 'App\Http\Controllers\ScannerController@scanUpcCod
 Route::post('/lookup-upc-code', 'App\Http\Controllers\ScannerController@lookupUpcCode')->name('lookupUpcCode');
 Route::post('/add-item-scanned-list', 'App\Http\Controllers\ScannerController@addItemViaScannedList')->name('addItemViaScannedList');
 Route::post('/remove-scanned-item', 'App\Http\Controllers\ScannerController@removeScannedItem')->name('removeScannedItem');
+
+Route::get('/admin', 'App\Http\Controllers\AdminController@index')->name('admin');
+Route::post('/admin/add-item', 'App\Http\Controllers\AdminController@addItem')->name('admin.addItem');
+Route::post('/admin/edit-item', 'App\Http\Controllers\AdminController@editItem')->name('admin.editItem');
+Route::post('/admin/delete-item', 'App\Http\Controllers\AdminController@deleteItem')->name('admin.deleteItem');
 
 require __DIR__.'/auth.php';
