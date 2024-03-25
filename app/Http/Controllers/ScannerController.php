@@ -244,7 +244,7 @@ class ScannerController extends Controller
             $manifest->save();
 
             $palletItem = new PalletItem();
-            $palletItem->pallet = 0;
+            $palletItem->pallet_number = 0;
             $palletItem->item_number = $input['item'];
             $palletItem->quantity = 1;
             $palletItem->save();
@@ -338,6 +338,12 @@ class ScannerController extends Controller
 
             $manifest->images = json_encode($imageURLArray);
             $manifest->save();
+
+            $palletItem = new PalletItem();
+            $palletItem->pallet_number = 0;
+            $palletItem->item_number = $input['item'];
+            $palletItem->quantity = 1;
+            $palletItem->save();
 
             $upcCodeCheck = UpcCode::where(['upc_code' => $input['upc_code'], 'item' => $input['item']])->first();
             if(collect($upcCodeCheck)->isEmpty()){
