@@ -14,6 +14,7 @@ use Spatie\PdfToText\Pdf;
 use App\Models\Manifest;
 use App\Models\UpcCode;
 use App\Models\ScannedItem;
+use App\Models\PalletItem;
 use DB;
 use Carbon\Carbon;
 use Dcblogdev\Dropbox\Facades\Dropbox;
