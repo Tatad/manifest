@@ -146,10 +146,10 @@
           form.description = '';
           form.msrp = '';
           form.retail_price = '';
-          form.image = '';
+          form.image = [];
           form.type = '';
           form.upc_code = '';
-          form.images = '';
+          form.images = [];
           itemInfo.value = [];
           previewItemModal.value = false;
         }
@@ -211,7 +211,7 @@
         );
       };
   }
-
+  const imgArray = ref([]);
   let onImageChange = (event) => {
     //form.image = event.target.files ? event.target.files[0] : null;
     imageThumb.value = []
@@ -233,11 +233,13 @@
         canvas.toBlob(
           (blob) => {
             // Handle the compressed image.
-            form.image.push(blob)
+            imgArray.value.push(blob)
+            //form.image.push(blob)
           },
         );
       };
     }
+    form.image = imgArray.value
   }
 
 </script>
